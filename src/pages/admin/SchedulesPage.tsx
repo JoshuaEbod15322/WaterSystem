@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   CalendarClock,
   Pencil,
@@ -6,17 +6,17 @@ import {
   RefreshCw,
   Save,
   Trash2,
-} from 'lucide-react'
-import type { DeliverySchedule } from '../../types'
+} from "lucide-react";
+import type { DeliverySchedule } from "../../types";
 import {
   deleteDeliverySchedule,
   getDeliverySchedules,
   saveDeliverySchedule,
-} from '../../services/settings'
-import { useToast } from '../../contexts/ToastContext'
-import { getErrorMessage } from '../../utils/errors'
-import { formatTimeRange, weekdayName } from '../../utils/dates'
-import { WEEKDAY_NAMES } from '../../utils/constants'
+} from "../../services/settings";
+import { useToast } from "../../contexts/ToastContext";
+import { getErrorMessage } from "../../utils/errors";
+import { formatTimeRange, weekdayName } from "../../utils/dates";
+import { WEEKDAY_NAMES } from "../../utils/constants";
 import {
   Alert,
   Card,
@@ -28,56 +28,56 @@ import {
   PageHeader,
   Select,
   Spinner,
-} from '../../components/common/ui'
-import { Button } from '../../components/common/Button'
+} from "../../components/common/ui";
+import { Button } from "../../components/common/Button";
 
 interface ScheduleFormValues {
-  dayOfWeek: string
-  startTime: string
-  endTime: string
-  maxOrders: string
-  isActive: boolean
+  dayOfWeek: string;
+  startTime: string;
+  endTime: string;
+  maxOrders: string;
+  isActive: boolean;
 }
 
 const emptyForm: ScheduleFormValues = {
-  dayOfWeek: '1',
-  startTime: '08:00',
-  endTime: '10:00',
-  maxOrders: '10',
+  dayOfWeek: "1",
+  startTime: "08:00",
+  endTime: "10:00",
+  maxOrders: "10",
   isActive: true,
-}
+};
 
 export function AdminSchedulesPage() {
-  const [schedules, setSchedules] = useState<DeliverySchedule[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [modalOpen, setModalOpen] = useState(false)
-  const [editing, setEditing] = useState<DeliverySchedule | null>(null)
-  const [form, setForm] = useState<ScheduleFormValues>(emptyForm)
-  const [formError, setFormError] = useState<string | null>(null)
-  const [saving, setSaving] = useState(false)
+  const [schedules, setSchedules] = useState<DeliverySchedule[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editing, setEditing] = useState<DeliverySchedule | null>(null);
+  const [form, setForm] = useState<ScheduleFormValues>(emptyForm);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<DeliverySchedule | null>(
     null,
-  )
-  const [deleting, setDeleting] = useState(false)
-  const toast = useToast()
+  );
+  const [deleting, setDeleting] = useState(false);
+  const toast = useToast();
 
   const load = useCallback(async (silent = false) => {
-    if (!silent) setLoading(true)
-    setError(null)
+    if (!silent) setLoading(true);
+    setError(null);
     try {
-      const next = await getDeliverySchedules()
-      setSchedules(next)
+      const next = await getDeliverySchedules();
+      setSchedules(next);
     } catch (loadError) {
-      setError(getErrorMessage(loadError))
+      setError(getErrorMessage(loadError));
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    void load()
-  }, [load])
+    void load();
+  }, [load]);
 
   const grouped = useMemo(() => {
     return WEEKDAY_NAMES.map((name, day) => ({
@@ -86,46 +86,46 @@ export function AdminSchedulesPage() {
       schedules: schedules
         .filter((schedule) => schedule.day_of_week === day)
         .sort((a, b) => a.start_time.localeCompare(b.start_time)),
-    })).filter((group) => group.day !== 0)
-  }, [schedules])
+    })).filter((group) => group.day !== 0);
+  }, [schedules]);
 
   const openCreate = () => {
-    setEditing(null)
-    setForm(emptyForm)
-    setFormError(null)
-    setModalOpen(true)
-  }
+    setEditing(null);
+    setForm(emptyForm);
+    setFormError(null);
+    setModalOpen(true);
+  };
 
   const openEdit = (schedule: DeliverySchedule) => {
-    setEditing(schedule)
+    setEditing(schedule);
     setForm({
       dayOfWeek: String(schedule.day_of_week),
       startTime: schedule.start_time.slice(0, 5),
       endTime: schedule.end_time.slice(0, 5),
       maxOrders: String(schedule.max_orders),
       isActive: schedule.is_active,
-    })
-    setFormError(null)
-    setModalOpen(true)
-  }
+    });
+    setFormError(null);
+    setModalOpen(true);
+  };
 
   const handleSave = async () => {
-    setFormError(null)
-    const maxOrders = Number(form.maxOrders)
+    setFormError(null);
+    const maxOrders = Number(form.maxOrders);
     if (!form.startTime || !form.endTime) {
-      setFormError('Start and end times are required.')
-      return
+      setFormError("Start and end times are required.");
+      return;
     }
     if (form.endTime <= form.startTime) {
-      setFormError('End time must be after the start time.')
-      return
+      setFormError("End time must be after the start time.");
+      return;
     }
     if (!Number.isInteger(maxOrders) || maxOrders < 1) {
-      setFormError('Maximum orders must be a whole number of at least 1.')
-      return
+      setFormError("Maximum orders must be a whole number of at least 1.");
+      return;
     }
 
-    setSaving(true)
+    setSaving(true);
     try {
       await saveDeliverySchedule(
         {
@@ -136,16 +136,16 @@ export function AdminSchedulesPage() {
           is_active: form.isActive,
         },
         editing?.id,
-      )
-      toast.success(editing ? 'Schedule updated.' : 'Schedule added.')
-      setModalOpen(false)
-      await load(true)
+      );
+      toast.success(editing ? "Schedule updated." : "Schedule added.");
+      setModalOpen(false);
+      await load(true);
     } catch (saveError) {
-      setFormError(getErrorMessage(saveError))
+      setFormError(getErrorMessage(saveError));
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   const handleToggle = async (schedule: DeliverySchedule) => {
     try {
@@ -158,30 +158,28 @@ export function AdminSchedulesPage() {
           is_active: !schedule.is_active,
         },
         schedule.id,
-      )
-      toast.success(
-        `Schedule ${schedule.is_active ? 'disabled' : 'enabled'}.`,
-      )
-      await load(true)
+      );
+      toast.success(`Schedule ${schedule.is_active ? "disabled" : "enabled"}.`);
+      await load(true);
     } catch (toggleError) {
-      toast.error(getErrorMessage(toggleError))
+      toast.error(getErrorMessage(toggleError));
     }
-  }
+  };
 
   const handleDelete = async () => {
-    if (!deleteTarget) return
-    setDeleting(true)
+    if (!deleteTarget) return;
+    setDeleting(true);
     try {
-      await deleteDeliverySchedule(deleteTarget.id)
-      toast.success('Schedule deleted.')
-      setDeleteTarget(null)
-      await load(true)
+      await deleteDeliverySchedule(deleteTarget.id);
+      toast.success("Schedule deleted.");
+      setDeleteTarget(null);
+      await load(true);
     } catch (deleteError) {
-      toast.error(getErrorMessage(deleteError))
+      toast.error(getErrorMessage(deleteError));
     } finally {
-      setDeleting(false)
+      setDeleting(false);
     }
-  }
+  };
 
   return (
     <div className="space-y-5">
@@ -211,16 +209,6 @@ export function AdminSchedulesPage() {
         </Alert>
       ) : null}
 
-      <div className="flex items-start gap-2 rounded-xl border border-brand-100 bg-brand-50 p-4 text-xs leading-relaxed text-brand-900">
-        <CalendarClock className="mt-0.5 h-4 w-4 shrink-0" />
-        <p>
-          Capacity is counted per delivery date and window. Once the configured
-          maximum number of non-cancelled orders is reached, that window is
-          hidden or disabled for customers. The database validates capacity
-          again when an order is placed.
-        </p>
-      </div>
-
       {loading ? (
         <Spinner label="Loading schedules…" />
       ) : schedules.length === 0 ? (
@@ -243,7 +231,10 @@ export function AdminSchedulesPage() {
                   {group.name}
                 </h2>
                 <span className="text-xs text-slate-400">
-                  {group.schedules.filter((schedule) => schedule.is_active).length}{' '}
+                  {
+                    group.schedules.filter((schedule) => schedule.is_active)
+                      .length
+                  }{" "}
                   active
                 </span>
               </div>
@@ -267,16 +258,16 @@ export function AdminSchedulesPage() {
                           )}
                         </p>
                         <p className="text-xs text-slate-400">
-                          Max {schedule.max_orders} orders ·{' '}
-                          {schedule.is_active ? 'Enabled' : 'Disabled'}
+                          Max {schedule.max_orders} orders ·{" "}
+                          {schedule.is_active ? "Enabled" : "Disabled"}
                         </p>
                       </div>
                       <div className="flex items-center gap-1">
                         <span
                           className={`mr-1 h-2 w-2 rounded-full ${
                             schedule.is_active
-                              ? 'bg-emerald-500'
-                              : 'bg-slate-300'
+                              ? "bg-emerald-500"
+                              : "bg-slate-300"
                           }`}
                         />
                         <Button
@@ -284,7 +275,7 @@ export function AdminSchedulesPage() {
                           variant="ghost"
                           onClick={() => void handleToggle(schedule)}
                         >
-                          {schedule.is_active ? 'Disable' : 'Enable'}
+                          {schedule.is_active ? "Disable" : "Enable"}
                         </Button>
                         <Button
                           size="sm"
@@ -314,7 +305,7 @@ export function AdminSchedulesPage() {
       <Modal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        title={editing ? 'Edit delivery schedule' : 'Add delivery schedule'}
+        title={editing ? "Edit delivery schedule" : "Add delivery schedule"}
         description="Schedules repeat every week."
         footer={
           <>
@@ -330,7 +321,7 @@ export function AdminSchedulesPage() {
               loading={saving}
               icon={<Save className="h-4 w-4" />}
             >
-              {editing ? 'Save schedule' : 'Add schedule'}
+              {editing ? "Save schedule" : "Add schedule"}
             </Button>
           </>
         }
@@ -433,7 +424,7 @@ export function AdminSchedulesPage() {
                 deleteTarget.start_time,
                 deleteTarget.end_time,
               )} will be removed. Existing orders keep their recorded delivery window.`
-            : ''
+            : ""
         }
         confirmLabel="Delete schedule"
         loading={deleting}
@@ -441,5 +432,5 @@ export function AdminSchedulesPage() {
         onClose={() => setDeleteTarget(null)}
       />
     </div>
-  )
+  );
 }

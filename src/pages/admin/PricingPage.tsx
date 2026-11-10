@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from "react";
 import {
   Calculator,
   Droplets,
@@ -6,16 +6,16 @@ import {
   RefreshCw,
   Save,
   Truck,
-} from 'lucide-react'
-import type { PricingSettings } from '../../types'
+} from "lucide-react";
+import type { PricingSettings } from "../../types";
 import {
   getPricingSettings,
   updatePricingSettings,
-} from '../../services/settings'
-import { useToast } from '../../contexts/ToastContext'
-import { getErrorMessage } from '../../utils/errors'
-import { calculateOrderTotals } from '../../utils/calculations'
-import { formatPeso } from '../../utils/money'
+} from "../../services/settings";
+import { useToast } from "../../contexts/ToastContext";
+import { getErrorMessage } from "../../utils/errors";
+import { calculateOrderTotals } from "../../utils/calculations";
+import { formatPeso } from "../../utils/money";
 import {
   Alert,
   Card,
@@ -24,43 +24,43 @@ import {
   PageHeader,
   Spinner,
   StatCard,
-} from '../../components/common/ui'
-import { Button } from '../../components/common/Button'
+} from "../../components/common/ui";
+import { Button } from "../../components/common/Button";
 
 export function AdminPricingPage() {
-  const [pricing, setPricing] = useState<PricingSettings | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [waterPrice, setWaterPrice] = useState('0')
-  const [containerPrice, setContainerPrice] = useState('0')
-  const [deliveryFee, setDeliveryFee] = useState('0')
-  const toast = useToast()
+  const [pricing, setPricing] = useState<PricingSettings | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [waterPrice, setWaterPrice] = useState("0");
+  const [containerPrice, setContainerPrice] = useState("0");
+  const [deliveryFee, setDeliveryFee] = useState("0");
+  const toast = useToast();
 
   const load = useCallback(async () => {
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
     try {
-      const next = await getPricingSettings()
-      setPricing(next)
-      setWaterPrice(String(next.water_price))
-      setContainerPrice(String(next.container_price))
-      setDeliveryFee(String(next.delivery_fee))
+      const next = await getPricingSettings();
+      setPricing(next);
+      setWaterPrice(String(next.water_price));
+      setContainerPrice(String(next.container_price));
+      setDeliveryFee(String(next.delivery_fee));
     } catch (loadError) {
-      setError(getErrorMessage(loadError))
+      setError(getErrorMessage(loadError));
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    void load()
-  }, [load])
+    void load();
+  }, [load]);
 
   const handleSave = async () => {
-    const water = Number(waterPrice)
-    const container = Number(containerPrice)
-    const fee = Number(deliveryFee)
+    const water = Number(waterPrice);
+    const container = Number(containerPrice);
+    const fee = Number(deliveryFee);
 
     if (
       !Number.isFinite(water) ||
@@ -70,41 +70,43 @@ export function AdminPricingPage() {
       container < 0 ||
       fee < 0
     ) {
-      toast.error('All prices must be valid non-negative amounts.')
-      return
+      toast.error("All prices must be valid non-negative amounts.");
+      return;
     }
 
-    setSaving(true)
+    setSaving(true);
     try {
       const updated = await updatePricingSettings({
         water_price: water,
         container_price: container,
         delivery_fee: fee,
-      })
-      setPricing(updated)
-      toast.success('Prices updated. Existing orders keep their original prices.')
+      });
+      setPricing(updated);
+      toast.success(
+        "Prices updated. Existing orders keep their original prices.",
+      );
     } catch (saveError) {
-      toast.error(getErrorMessage(saveError))
+      toast.error(getErrorMessage(saveError));
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   const totals = calculateOrderTotals({
     waterQuantity: 2,
-    containerType: 'new',
+    containerType: "new",
     waterPrice: Number(waterPrice) || 0,
     containerPrice: Number(containerPrice) || 0,
     deliveryFee: Number(deliveryFee) || 0,
-  })
+  });
 
   const exchangeTotals = calculateOrderTotals({
     waterQuantity: 2,
-    containerType: 'exchange',
+    containerType: "exchange",
     waterPrice: Number(waterPrice) || 0,
     containerPrice: Number(containerPrice) || 0,
     deliveryFee: Number(deliveryFee) || 0,
-  })
+  });
 
   return (
     <div className="space-y-5">
@@ -268,7 +270,7 @@ export function AdminPricingPage() {
                     Purchase new containers
                   </p>
                   <p className="mt-1 text-xs text-slate-400">
-                    2 × ({formatPeso(Number(waterPrice) || 0)} water +{' '}
+                    2 × ({formatPeso(Number(waterPrice) || 0)} water +{" "}
                     {formatPeso(Number(containerPrice) || 0)} container)
                   </p>
                   <div className="mt-3 space-y-1.5 text-sm">
@@ -292,15 +294,15 @@ export function AdminPricingPage() {
                 </div>
               </div>
 
-              <Alert tone="info" title="Historical orders are protected" >
+              {/* <Alert tone="info" title="Historical orders are protected">
                 Each order stores the water price, container price and delivery
                 fee used at the time it was placed. Changing prices never
                 changes completed or pending orders.
-              </Alert>
+              </Alert> */}
             </Card>
           </div>
         </>
       ) : null}
     </div>
-  )
+  );
 }

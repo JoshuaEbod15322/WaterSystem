@@ -11,7 +11,6 @@ import {
 import type { LatLng } from '../../types'
 import {
   driverIcon,
-  numberedPinIcon,
   orderIcon,
   stationIcon,
 } from '../../utils/mapIcons'
@@ -25,8 +24,6 @@ export interface RouteMapDestination extends LatLng {
   id: string
   label: string
   status: string
-  /** Recommended visit order for numbered route pins. */
-  sequence?: number
 }
 
 export interface RouteMapLine {
@@ -94,7 +91,6 @@ export function RouteMap({
   routes,
   heightClass = 'h-72',
   selectedDestinationId,
-  numberedPins = false,
 }: {
   station: LatLng | null
   driver: LatLng | null
@@ -102,8 +98,6 @@ export function RouteMap({
   routes: RouteMapLine[]
   heightClass?: string
   selectedDestinationId?: string
-  /** Draw numbered Lucide MapPins using each stop's visit order. */
-  numberedPins?: boolean
 }) {
   const center = station ?? destinations[0] ?? DEFAULT_CENTER
 
@@ -175,18 +169,11 @@ export function RouteMap({
           </Marker>
         ) : null}
 
-        {destinations.map((destination, index) => (
+        {destinations.map((destination) => (
           <Marker
             key={destination.id}
             position={[destination.lat, destination.lng]}
-            icon={
-              numberedPins
-                ? numberedPinIcon(
-                    destination.sequence ?? index + 1,
-                    destination.status,
-                  )
-                : orderIcon(destination.status)
-            }
+            icon={orderIcon(destination.status)}
             opacity={
               selectedDestinationId && selectedDestinationId !== destination.id
                 ? 0.65

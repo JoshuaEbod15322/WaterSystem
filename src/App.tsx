@@ -36,7 +36,8 @@ import { PaymentPage } from './pages/customer/PaymentPage'
 import { CustomerOrdersPage } from './pages/customer/OrdersPage'
 import { CustomerOrderDetailPage } from './pages/customer/OrderDetailPage'
 import { CustomerProfilePage } from './pages/customer/ProfilePage'
-import { DriverDashboardPage } from './pages/driver/DashboardPage'
+import { DriverPendingOrdersPage } from './pages/driver/PendingOrdersPage'
+import { DriverActiveRoutePage } from './pages/driver/ActiveRoutePage'
 import { DriverDeliveryPage } from './pages/driver/DeliveryPage'
 import { DriverHistoryPage } from './pages/driver/HistoryPage'
 
@@ -132,7 +133,8 @@ export default function App() {
             </ProtectedRoute>
           }
         >
-          <Route index element={<DriverDashboardPage />} />
+          <Route index element={<DriverPendingOrdersPage />} />
+          <Route path="route" element={<DriverActiveRoutePage />} />
           <Route path="deliveries/:orderId" element={<DriverDeliveryPage />} />
           <Route path="history" element={<DriverHistoryPage />} />
         </Route>

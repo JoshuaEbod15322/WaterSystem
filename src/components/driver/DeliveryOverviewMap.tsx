@@ -100,19 +100,17 @@ export function DeliveryOverviewMap({
     [optimized],
   )
 
-  const destinations = useMemo<RouteMapDestination[]>(() => {
-    const sequences = new Map(
-      (optimized?.stops ?? []).map((stop) => [stop.id, stop.sequence]),
-    )
-    return orders.map((order) => ({
-      id: order.id,
-      label: `${order.order_code} · ${order.customer_name}`,
-      status: order.order_status,
-      lat: Number(order.delivery_latitude),
-      lng: Number(order.delivery_longitude),
-      sequence: sequences.get(order.id),
-    }))
-  }, [orders, optimized])
+  const destinations = useMemo<RouteMapDestination[]>(
+    () =>
+      orders.map((order) => ({
+        id: order.id,
+        label: `${order.order_code} · ${order.customer_name}`,
+        status: order.order_status,
+        lat: Number(order.delivery_latitude),
+        lng: Number(order.delivery_longitude),
+      })),
+    [orders],
+  )
 
   const orderedStops = useMemo(() => {
     if (!optimized) return []
@@ -130,7 +128,6 @@ export function DeliveryOverviewMap({
         destinations={destinations}
         routes={routes}
         heightClass={heightClass}
-        numberedPins={Boolean(optimized)}
       />
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-1 text-[11px] text-slate-500">

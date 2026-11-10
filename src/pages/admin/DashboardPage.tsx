@@ -1,125 +1,122 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { format, subDays } from 'date-fns'
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { format, subDays } from "date-fns";
 import {
   Activity,
   ArrowRight,
   CreditCard,
   Package,
   RefreshCw,
-} from 'lucide-react'
-import type { OrderWithRelations } from '../../types'
-import { listAdminOrders } from '../../services/orders'
+} from "lucide-react";
+import type { OrderWithRelations } from "../../types";
+import { listAdminOrders } from "../../services/orders";
 import {
   getOrderCounts,
   getPaidSales,
   type OrderCounts,
   type PaidSale,
-} from '../../services/reports'
-import { useRealtimeRefresh } from '../../hooks/useRealtimeRefresh'
-import { useToast } from '../../contexts/ToastContext'
-import { getErrorMessage } from '../../utils/errors'
-import {
-  ORDER_STATUSES,
-  ORDER_STATUS_META,
-} from '../../utils/constants'
-import { formatShortDate } from '../../utils/dates'
-import { formatPeso } from '../../utils/money'
+} from "../../services/reports";
+import { useRealtimeRefresh } from "../../hooks/useRealtimeRefresh";
+import { useToast } from "../../contexts/ToastContext";
+import { getErrorMessage } from "../../utils/errors";
+import { ORDER_STATUSES, ORDER_STATUS_META } from "../../utils/constants";
+import { formatShortDate } from "../../utils/dates";
+import { formatPeso } from "../../utils/money";
 import {
   Alert,
   Card,
   PageHeader,
   Spinner,
   StatCard,
-} from '../../components/common/ui'
-import { Button } from '../../components/common/Button'
-import { OrderTable } from '../../components/admin/OrderTable'
+} from "../../components/common/ui";
+import { Button } from "../../components/common/Button";
+import { OrderTable } from "../../components/admin/OrderTable";
 
 interface DashboardData {
-  orders: OrderWithRelations[]
-  counts: OrderCounts
-  sales: number
-  paidSales: PaidSale[]
+  orders: OrderWithRelations[];
+  counts: OrderCounts;
+  sales: number;
+  paidSales: PaidSale[];
 }
 
 export function AdminDashboardPage() {
-  const [data, setData] = useState<DashboardData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const toast = useToast()
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const toast = useToast();
 
   const load = useCallback(async (silent = false) => {
-    if (!silent) setLoading(true)
-    setError(null)
+    if (!silent) setLoading(true);
+    setError(null);
     try {
       const [orders, counts, paidSales] = await Promise.all([
         listAdminOrders(),
         getOrderCounts(),
         getPaidSales(),
-      ])
+      ]);
 
       setData({
         orders,
         counts,
         sales: paidSales.reduce((sum, sale) => sum + sale.amount, 0),
         paidSales,
-      })
+      });
     } catch (loadError) {
-      setError(getErrorMessage(loadError))
+      setError(getErrorMessage(loadError));
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    void load()
-  }, [load])
+    void load();
+  }, [load]);
 
-  useRealtimeRefresh('orders', () => void load(true))
+  useRealtimeRefresh("orders", () => void load(true));
   // A payment can settle without an order status change (online checkout), so
   // refresh the sales figures when the payments table changes too.
-  useRealtimeRefresh('payments', () => void load(true))
+  useRealtimeRefresh("payments", () => void load(true));
 
   const recentOrders = useMemo(
     () => data?.orders.slice(0, 6) ?? [],
     [data?.orders],
-  )
+  );
 
   const statusCounts = useMemo(() => {
-    const map = new Map<string, number>()
+    const map = new Map<string, number>();
     data?.orders.forEach((order) => {
-      map.set(order.order_status, (map.get(order.order_status) ?? 0) + 1)
-    })
-    return map
-  }, [data?.orders])
+      map.set(order.order_status, (map.get(order.order_status) ?? 0) + 1);
+    });
+    return map;
+  }, [data?.orders]);
 
   // Revenue is recognised when the payment settles (online checkout or cash
   // collected on delivery), not when the order status changes.
   const dailySales = useMemo(() => {
     const days = Array.from({ length: 7 }, (_, index) => {
-      const date = subDays(new Date(), 6 - index)
+      const date = subDays(new Date(), 6 - index);
       return {
-        key: format(date, 'yyyy-MM-dd'),
-        label: format(date, 'EEE'),
+        key: format(date, "yyyy-MM-dd"),
+        label: format(date, "EEE"),
         total: 0,
-      }
-    })
-    const byKey = new Map(days.map((day) => [day.key, day]))
+      };
+    });
+    const byKey = new Map(days.map((day) => [day.key, day]));
 
     data?.paidSales.forEach((sale) => {
-      if (!sale.paid_at) return
-      const day = byKey.get(format(new Date(sale.paid_at), 'yyyy-MM-dd'))
-      if (day) day.total += sale.amount
-    })
+      if (!sale.paid_at) return;
+      const day = byKey.get(format(new Date(sale.paid_at), "yyyy-MM-dd"));
+      if (day) day.total += sale.amount;
+    });
 
-    const max = Math.max(...days.map((day) => day.total), 1)
-    return { days, max }
-  }, [data?.paidSales])
+    const max = Math.max(...days.map((day) => day.total), 1);
+    return { days, max };
+  }, [data?.paidSales]);
 
   const handleRefresh = async () => {
-    await load(true)
-    toast.success('Dashboard refreshed.')
-  }
+    await load(true);
+    toast.success("Dashboard refreshed.");
+  };
 
   return (
     <div className="space-y-6">
@@ -198,9 +195,9 @@ export function AdminDashboardPage() {
               </h2>
               <div className="mt-4 space-y-3">
                 {ORDER_STATUSES.map((status) => {
-                  const count = statusCounts.get(status) ?? 0
-                  const total = Math.max(data.counts.total, 1)
-                  const percentage = Math.round((count / total) * 100)
+                  const count = statusCounts.get(status) ?? 0;
+                  const total = Math.max(data.counts.total, 1);
+                  const percentage = Math.round((count / total) * 100);
                   return (
                     <div key={status}>
                       <div className="flex items-center justify-between text-xs">
@@ -221,7 +218,7 @@ export function AdminDashboardPage() {
                         />
                       </div>
                     </div>
-                  )
+                  );
                 })}
               </div>
             </Card>
@@ -247,11 +244,11 @@ export function AdminDashboardPage() {
                   className="flex flex-1 flex-col items-center gap-2"
                 >
                   <span className="text-[10px] font-semibold text-slate-500">
-                    {day.total > 0 ? formatPeso(day.total) : ''}
+                    {day.total > 0 ? formatPeso(day.total) : ""}
                   </span>
                   <div
                     className={`w-full rounded-t-md transition-all ${
-                      day.total > 0 ? 'bg-brand-500' : 'bg-slate-100'
+                      day.total > 0 ? "bg-brand-500" : "bg-slate-100"
                     }`}
                     style={{
                       height: `${Math.max((day.total / dailySales.max) * 120, day.total > 0 ? 8 : 4)}px`,
@@ -268,5 +265,5 @@ export function AdminDashboardPage() {
         </>
       ) : null}
     </div>
-  )
+  );
 }

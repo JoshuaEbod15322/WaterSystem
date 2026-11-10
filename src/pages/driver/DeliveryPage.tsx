@@ -55,9 +55,13 @@ export function DriverDeliveryPage() {
   const { profile } = useAuth()
   const navigate = useNavigate()
   const toast = useToast()
-  const { position, error: gpsError, active: gpsActive } = useDriverLocation(
-    profile?.id,
-  )
+  const {
+    position,
+    error: gpsError,
+    active: gpsActive,
+    status: gpsStatus,
+    start: startGps,
+  } = useDriverLocation(profile?.id)
 
   const [order, setOrder] = useState<Order | null>(null)
   const [station, setStation] = useState<StationSettings | null>(null)
@@ -358,11 +362,20 @@ export function DriverDeliveryPage() {
               <Crosshair className="h-3 w-3" />
               GPS on
             </span>
-          ) : (
+          ) : gpsStatus === 'requesting' ? (
             <span className="ml-auto inline-flex items-center gap-1.5 text-[11px] font-medium text-amber-700">
-              <Crosshair className="h-3 w-3" />
-              {gpsError ? 'GPS off' : 'GPS…'}
+              <Crosshair className="h-3 w-3 animate-pulse" />
+              Locating…
             </span>
+          ) : (
+            <button
+              type="button"
+              onClick={startGps}
+              className="ml-auto inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-700 transition hover:text-amber-900"
+            >
+              <Crosshair className="h-3 w-3" />
+              {gpsError ? 'Retry GPS' : 'Enable GPS'}
+            </button>
           )}
         </div>
 

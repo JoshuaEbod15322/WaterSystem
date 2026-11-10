@@ -1,6 +1,6 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
 import {
   CheckCircle2,
   Droplets,
@@ -8,61 +8,60 @@ import {
   EyeOff,
   MapPin,
   UserPlus,
-} from 'lucide-react'
-import { Logo } from '../../components/common/Logo'
-import { SetupNotice } from '../../components/common/SetupNotice'
-import { Alert, Field, Input } from '../../components/common/ui'
-import { Button } from '../../components/common/Button'
-import { useAuth } from '../../contexts/AuthContext'
-import { useToast } from '../../contexts/ToastContext'
-import { getErrorMessage } from '../../utils/errors'
+} from "lucide-react";
+import { SetupNotice } from "../../components/common/SetupNotice";
+import { Alert, Field, Input } from "../../components/common/ui";
+import { Button } from "../../components/common/Button";
+import { useAuth } from "../../contexts/AuthContext";
+import { useToast } from "../../contexts/ToastContext";
+import { getErrorMessage } from "../../utils/errors";
 
 interface SignupFormValues {
-  fullName: string
-  email: string
-  phone: string
-  password: string
-  confirmPassword: string
+  fullName: string;
+  email: string;
+  phone: string;
+  password: string;
+  confirmPassword: string;
 }
 
 export function SignupPage() {
-  const { signUp, configured } = useAuth()
-  const navigate = useNavigate()
-  const toast = useToast()
-  const [formError, setFormError] = useState<string | null>(null)
-  const [confirmationSent, setConfirmationSent] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
+  const { signUp, configured } = useAuth();
+  const navigate = useNavigate();
+  const toast = useToast();
+  const [formError, setFormError] = useState<string | null>(null);
+  const [confirmationSent, setConfirmationSent] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
     handleSubmit,
     watch,
     formState: { errors, isSubmitting },
-  } = useForm<SignupFormValues>()
+  } = useForm<SignupFormValues>();
 
-  const password = watch('password')
+  const password = watch("password");
 
   const onSubmit = handleSubmit(async (values) => {
-    setFormError(null)
+    setFormError(null);
     try {
       const result = await signUp({
         fullName: values.fullName,
         email: values.email,
         phone: values.phone,
         password: values.password,
-      })
+      });
 
       if (result.needsEmailConfirmation) {
-        setConfirmationSent(true)
-        return
+        setConfirmationSent(true);
+        return;
       }
 
-      toast.success('Your customer account is ready!')
-      navigate('/customer', { replace: true })
+      toast.success("Your customer account is ready!");
+      navigate("/customer", { replace: true });
     } catch (error) {
-      setFormError(getErrorMessage(error))
+      setFormError(getErrorMessage(error));
     }
-  })
+  });
 
   if (confirmationSent) {
     return (
@@ -83,7 +82,7 @@ export function SignupPage() {
           </Link>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -92,20 +91,9 @@ export function SignupPage() {
         <SetupNotice />
         <div className="flex flex-1 items-center justify-center px-4 py-12 sm:px-8">
           <div className="w-full max-w-md">
-            <div className="mb-8">
-              <Logo />
-            </div>
-
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-600">
-              Customer registration
-            </p>
             <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">
               Create your account
             </h1>
-            <p className="mt-2 text-sm text-slate-500">
-              Public registration is available to customers only. Administrators
-              and drivers cannot be created from this page.
-            </p>
 
             {formError ? (
               <div className="mt-6">
@@ -124,11 +112,11 @@ export function SignupPage() {
                   id="fullName"
                   autoComplete="name"
                   placeholder="Juan Dela Cruz"
-                  {...register('fullName', {
-                    required: 'Full name is required.',
+                  {...register("fullName", {
+                    required: "Full name is required.",
                     minLength: {
                       value: 2,
-                      message: 'Enter your complete name.',
+                      message: "Enter your complete name.",
                     },
                   })}
                 />
@@ -145,11 +133,11 @@ export function SignupPage() {
                   type="email"
                   autoComplete="email"
                   placeholder="you@example.com"
-                  {...register('email', {
-                    required: 'Email is required.',
+                  {...register("email", {
+                    required: "Email is required.",
                     pattern: {
                       value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                      message: 'Enter a valid email address.',
+                      message: "Enter a valid email address.",
                     },
                   })}
                 />
@@ -167,11 +155,11 @@ export function SignupPage() {
                   type="tel"
                   autoComplete="tel"
                   placeholder="09XX XXX XXXX"
-                  {...register('phone', {
-                    required: 'Mobile number is required.',
+                  {...register("phone", {
+                    required: "Mobile number is required.",
                     pattern: {
                       value: /^[0-9+()\-\s]{7,20}$/,
-                      message: 'Enter a valid contact number.',
+                      message: "Enter a valid contact number.",
                     },
                   })}
                 />
@@ -187,15 +175,15 @@ export function SignupPage() {
                   <div className="relative">
                     <Input
                       id="password"
-                      type={showPassword ? 'text' : 'password'}
+                      type={showPassword ? "text" : "password"}
                       autoComplete="new-password"
                       placeholder="Min. 6 characters"
                       className="pr-10"
-                      {...register('password', {
-                        required: 'Password is required.',
+                      {...register("password", {
+                        required: "Password is required.",
                         minLength: {
                           value: 6,
-                          message: 'Use at least 6 characters.',
+                          message: "Use at least 6 characters.",
                         },
                       })}
                     />
@@ -204,7 +192,7 @@ export function SignupPage() {
                       onClick={() => setShowPassword((visible) => !visible)}
                       className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-slate-400 hover:text-slate-600"
                       aria-label={
-                        showPassword ? 'Hide password' : 'Show password'
+                        showPassword ? "Hide password" : "Show password"
                       }
                     >
                       {showPassword ? (
@@ -224,13 +212,13 @@ export function SignupPage() {
                 >
                   <Input
                     id="confirmPassword"
-                    type={showPassword ? 'text' : 'password'}
+                    type={showPassword ? "text" : "password"}
                     autoComplete="new-password"
                     placeholder="Repeat password"
-                    {...register('confirmPassword', {
-                      required: 'Please confirm your password.',
+                    {...register("confirmPassword", {
+                      required: "Please confirm your password.",
                       validate: (value) =>
-                        value === password || 'Passwords do not match.',
+                        value === password || "Passwords do not match.",
                     })}
                   />
                 </Field>
@@ -244,12 +232,12 @@ export function SignupPage() {
                 disabled={!configured}
                 icon={<UserPlus className="h-4 w-4" />}
               >
-                {isSubmitting ? 'Creating account…' : 'Create customer account'}
+                {isSubmitting ? "Creating account…" : "Create customer account"}
               </Button>
             </form>
 
             <p className="mt-6 text-center text-sm text-slate-500">
-              Already have an account?{' '}
+              Already have an account?{" "}
               <Link
                 to="/login"
                 className="font-semibold text-brand-700 hover:text-brand-800"
@@ -265,9 +253,6 @@ export function SignupPage() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(56,166,248,0.35),transparent_45%),radial-gradient(circle_at_20%_80%,rgba(14,116,144,0.4),transparent_45%)]" />
         <div className="relative flex h-full flex-col justify-center p-12">
           <div className="max-w-md">
-            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-brand-200 ring-1 ring-white/15">
-              <Droplets className="h-6 w-6" />
-            </span>
             <h2 className="mt-6 text-3xl font-bold leading-tight text-white">
               Pure water, delivered on your schedule.
             </h2>
@@ -296,5 +281,5 @@ export function SignupPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

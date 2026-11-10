@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Banknote,
   BarChart3,
@@ -7,20 +7,15 @@ import {
   ShoppingBag,
   TrendingUp,
   XCircle,
-} from 'lucide-react'
-import {
-  format,
-  startOfDay,
-  startOfMonth,
-  subDays,
-} from 'date-fns'
-import type { OrderWithRelations } from '../../types'
-import { getAllOrdersForReports } from '../../services/reports'
-import { useRealtimeRefresh } from '../../hooks/useRealtimeRefresh'
-import { useToast } from '../../contexts/ToastContext'
-import { getErrorMessage } from '../../utils/errors'
-import { formatPeso } from '../../utils/money'
-import { parseISO } from '../../utils/dates'
+} from "lucide-react";
+import { format, startOfDay, startOfMonth, subDays } from "date-fns";
+import type { OrderWithRelations } from "../../types";
+import { getAllOrdersForReports } from "../../services/reports";
+import { useRealtimeRefresh } from "../../hooks/useRealtimeRefresh";
+import { useToast } from "../../contexts/ToastContext";
+import { getErrorMessage } from "../../utils/errors";
+import { formatPeso } from "../../utils/money";
+import { parseISO } from "../../utils/dates";
 import {
   Alert,
   Card,
@@ -28,111 +23,114 @@ import {
   PageHeader,
   Spinner,
   StatCard,
-} from '../../components/common/ui'
-import { Button } from '../../components/common/Button'
+} from "../../components/common/ui";
+import { Button } from "../../components/common/Button";
 
-type RangeKey = 'today' | '7d' | '30d' | 'month' | 'all'
+type RangeKey = "today" | "7d" | "30d" | "month" | "all";
 
 const rangeLabels: Record<RangeKey, string> = {
-  today: 'Today',
-  '7d': 'Last 7 days',
-  '30d': 'Last 30 days',
-  month: 'This month',
-  all: 'All time',
-}
+  today: "Today",
+  "7d": "Last 7 days",
+  "30d": "Last 30 days",
+  month: "This month",
+  all: "All time",
+};
 
 function rangeStart(key: RangeKey): Date | null {
-  const now = new Date()
-  if (key === 'today') return startOfDay(now)
-  if (key === '7d') return startOfDay(subDays(now, 6))
-  if (key === '30d') return startOfDay(subDays(now, 29))
-  if (key === 'month') return startOfMonth(now)
-  return null
+  const now = new Date();
+  if (key === "today") return startOfDay(now);
+  if (key === "7d") return startOfDay(subDays(now, 6));
+  if (key === "30d") return startOfDay(subDays(now, 29));
+  if (key === "month") return startOfMonth(now);
+  return null;
 }
 
 export function AdminReportsPage() {
-  const [orders, setOrders] = useState<OrderWithRelations[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [range, setRange] = useState<RangeKey>('30d')
-  const toast = useToast()
+  const [orders, setOrders] = useState<OrderWithRelations[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [range, setRange] = useState<RangeKey>("30d");
+  const toast = useToast();
 
   const load = useCallback(async (silent = false) => {
-    if (!silent) setLoading(true)
-    setError(null)
+    if (!silent) setLoading(true);
+    setError(null);
     try {
-      setOrders(await getAllOrdersForReports())
+      setOrders(await getAllOrdersForReports());
     } catch (loadError) {
-      setError(getErrorMessage(loadError))
+      setError(getErrorMessage(loadError));
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    void load()
-  }, [load])
+    void load();
+  }, [load]);
 
-  useRealtimeRefresh('orders', () => void load(true))
+  useRealtimeRefresh("orders", () => void load(true));
 
   const filtered = useMemo(() => {
-    const start = rangeStart(range)
-    if (!start) return orders
+    const start = rangeStart(range);
+    if (!start) return orders;
     return orders.filter((order) => {
-      const createdAt = new Date(order.created_at)
-      return createdAt >= start
-    })
-  }, [orders, range])
+      const createdAt = new Date(order.created_at);
+      return createdAt >= start;
+    });
+  }, [orders, range]);
 
   const metrics = useMemo(() => {
     const completed = filtered.filter(
-      (order) => order.order_status === 'delivered',
-    )
+      (order) => order.order_status === "delivered",
+    );
     // Revenue is recognised as soon as the payment settles, even when the
     // water has not been delivered yet.
     const paidOrders = filtered.filter(
-      (order) => order.payment_status === 'paid',
-    )
+      (order) => order.payment_status === "paid",
+    );
     const cancelled = filtered.filter(
-      (order) => order.order_status === 'cancelled',
-    )
+      (order) => order.order_status === "cancelled",
+    );
     const sales = paidOrders.reduce(
       (sum, order) => sum + Number(order.total_amount),
       0,
-    )
+    );
     const stripePaid = paidOrders
-      .filter((order) => order.payment_method === 'stripe')
-      .reduce((sum, order) => sum + Number(order.total_amount), 0)
+      .filter((order) => order.payment_method === "stripe")
+      .reduce((sum, order) => sum + Number(order.total_amount), 0);
     const codPaid = paidOrders
-      .filter((order) => order.payment_method === 'cod')
-      .reduce((sum, order) => sum + Number(order.total_amount), 0)
+      .filter((order) => order.payment_method === "cod")
+      .reduce((sum, order) => sum + Number(order.total_amount), 0);
     const codUncollected = completed.filter(
       (order) =>
-        order.payment_method === 'cod' && order.payment_status === 'pending',
-    )
+        order.payment_method === "cod" && order.payment_status === "pending",
+    );
     const codUncollectedAmount = codUncollected.reduce(
       (sum, order) => sum + Number(order.total_amount),
       0,
-    )
+    );
 
     const dailyMap = new Map<
       string,
       { date: string; orders: number; sales: number }
-    >()
+    >();
     paidOrders.forEach((order) => {
       const paidAt = Array.isArray(order.payments)
         ? order.payments[0]?.paid_at
-        : null
-      const date = (paidAt ?? order.updated_at ?? order.created_at).slice(0, 10)
-      const current = dailyMap.get(date) ?? { date, orders: 0, sales: 0 }
-      current.orders += 1
-      current.sales += Number(order.total_amount)
-      dailyMap.set(date, current)
-    })
+        : null;
+      const date = (paidAt ?? order.updated_at ?? order.created_at).slice(
+        0,
+        10,
+      );
+      const current = dailyMap.get(date) ?? { date, orders: 0, sales: 0 };
+      current.orders += 1;
+      current.sales += Number(order.total_amount);
+      dailyMap.set(date, current);
+    });
 
     const daily = [...dailyMap.values()]
       .sort((a, b) => b.date.localeCompare(a.date))
-      .slice(0, 14)
+      .slice(0, 14);
 
     return {
       sales,
@@ -145,19 +143,19 @@ export function AdminReportsPage() {
       average: paidOrders.length ? sales / paidOrders.length : 0,
       totalOrders: filtered.length,
       daily,
-      codOrders: filtered.filter((order) => order.payment_method === 'cod')
+      codOrders: filtered.filter((order) => order.payment_method === "cod")
         .length,
       stripeOrders: filtered.filter(
-        (order) => order.payment_method === 'stripe',
+        (order) => order.payment_method === "stripe",
       ).length,
       paidOrders: paidOrders.length,
-    }
-  }, [filtered])
+    };
+  }, [filtered]);
 
   const handleRefresh = async () => {
-    await load(true)
-    toast.success('Reports refreshed.')
-  }
+    await load(true);
+    toast.success("Reports refreshed.");
+  };
 
   return (
     <div className="space-y-5">
@@ -181,7 +179,7 @@ export function AdminReportsPage() {
           <Button
             key={key}
             size="sm"
-            variant={range === key ? 'primary' : 'outline'}
+            variant={range === key ? "primary" : "outline"}
             onClick={() => setRange(key)}
           >
             {rangeLabels[key]}
@@ -289,7 +287,7 @@ export function AdminReportsPage() {
                       {metrics.daily.map((day) => (
                         <tr key={day.date}>
                           <td className="px-3 py-2.5 text-slate-600">
-                            {format(parseISO(day.date), 'EEE, MMM d, yyyy')}
+                            {format(parseISO(day.date), "EEE, MMM d, yyyy")}
                           </td>
                           <td className="px-3 py-2.5 text-slate-600">
                             {day.orders}
@@ -340,7 +338,7 @@ export function AdminReportsPage() {
                   </p>
                 </div>
 
-                <div className="rounded-xl bg-slate-50 p-4 text-xs leading-relaxed text-slate-500">
+                {/* <div className="rounded-xl bg-slate-50 p-4 text-xs leading-relaxed text-slate-500">
                   <p>
                     <span className="font-semibold text-slate-700">
                       {metrics.paidOrders}
@@ -349,12 +347,12 @@ export function AdminReportsPage() {
                     for delivered orders, so it reflects money still to be
                     collected.
                   </p>
-                </div>
+                </div> */}
               </div>
             </Card>
           </div>
         </>
       )}
     </div>
-  )
+  );
 }

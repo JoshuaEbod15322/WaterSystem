@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState } from "react";
 import {
   CalendarDays,
   Mail,
@@ -7,12 +7,12 @@ import {
   Save,
   ShieldCheck,
   UserRound,
-} from 'lucide-react'
-import { useAuth } from '../../contexts/AuthContext'
-import { useToast } from '../../contexts/ToastContext'
-import { updateOwnProfile } from '../../services/auth'
-import { getErrorMessage } from '../../utils/errors'
-import { formatDateTime } from '../../utils/dates'
+} from "lucide-react";
+import { useAuth } from "../../contexts/AuthContext";
+import { useToast } from "../../contexts/ToastContext";
+import { updateOwnProfile } from "../../services/auth";
+import { getErrorMessage } from "../../utils/errors";
+import { formatDateTime } from "../../utils/dates";
 import {
   Alert,
   Card,
@@ -20,56 +20,56 @@ import {
   Input,
   PageHeader,
   Textarea,
-} from '../../components/common/ui'
-import { Button } from '../../components/common/Button'
+} from "../../components/common/ui";
+import { Button } from "../../components/common/Button";
 
 export function CustomerProfilePage() {
-  const { profile, refreshProfile } = useAuth()
-  const toast = useToast()
-  const [fullName, setFullName] = useState('')
-  const [phone, setPhone] = useState('')
-  const [address, setAddress] = useState('')
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const { profile, refreshProfile } = useAuth();
+  const toast = useToast();
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!profile) return
-    setFullName(profile.full_name)
-    setPhone(profile.phone ?? '')
-    setAddress(profile.address ?? '')
-  }, [profile])
+    if (!profile) return;
+    setFullName(profile.full_name);
+    setPhone(profile.phone ?? "");
+    setAddress(profile.address ?? "");
+  }, [profile]);
 
   const handleSave = async () => {
-    if (!profile) return
+    if (!profile) return;
     if (fullName.trim().length < 2) {
-      toast.error('Enter your full name.')
-      return
+      toast.error("Enter your full name.");
+      return;
     }
     if (!/^[0-9+()\-\s]{7,20}$/.test(phone.trim())) {
-      toast.error('Enter a valid mobile number.')
-      return
+      toast.error("Enter a valid mobile number.");
+      return;
     }
 
-    setSaving(true)
-    setError(null)
+    setSaving(true);
+    setError(null);
     try {
       await updateOwnProfile(profile.id, {
         full_name: fullName.trim(),
         phone: phone.trim(),
         address: address.trim() || null,
-      })
-      await refreshProfile()
-      toast.success('Profile updated.')
+      });
+      await refreshProfile();
+      toast.success("Profile updated.");
     } catch (saveError) {
-      const message = getErrorMessage(saveError)
-      setError(message)
-      toast.error(message)
+      const message = getErrorMessage(saveError);
+      setError(message);
+      toast.error(message);
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
-  if (!profile) return null
+  if (!profile) return null;
 
   return (
     <div className="space-y-5">
@@ -85,7 +85,7 @@ export function CustomerProfilePage() {
         <Card className="p-5 lg:col-span-2">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-100 text-lg font-bold text-brand-700">
-              {profile.full_name.charAt(0).toUpperCase() || 'C'}
+              {profile.full_name.charAt(0).toUpperCase() || "C"}
             </div>
             <div>
               <h2 className="text-base font-semibold text-slate-900">
@@ -186,14 +186,8 @@ export function CustomerProfilePage() {
               </div>
             </div>
           </Card>
-
-          <div className="rounded-xl border border-slate-200 bg-white p-4 text-xs leading-relaxed text-slate-500">
-            Your account role is fixed as <span className="font-semibold">Customer</span>.
-            Role changes are protected by database row-level security and can
-            only be performed by an administrator.
-          </div>
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
-import { ClipboardList, Menu, Route, X } from 'lucide-react'
+import { ClipboardList, History, Menu, Route, X } from 'lucide-react'
 import { AppSidebar, type SidebarItem } from '../components/layout/AppSidebar'
 import { Logo } from '../components/common/Logo'
 import { SetupNotice } from '../components/common/SetupNotice'
 
 const navItems: SidebarItem[] = [
-  { to: '/driver', label: 'Deliveries', icon: ClipboardList, end: true },
-  { to: '/driver/history', label: 'History', icon: Route },
+  { to: '/driver', label: 'Pending Orders', icon: ClipboardList, end: true },
+  { to: '/driver/route', label: 'Active Route', icon: Route },
+  { to: '/driver/history', label: 'History', icon: History },
 ]
 
 export function DriverLayout() {

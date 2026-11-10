@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   AlertTriangle,
   ArrowRight,
@@ -14,38 +14,38 @@ import {
   Route,
   ShoppingCart,
   Truck,
-} from 'lucide-react'
+} from "lucide-react";
 import type {
   ContainerType,
   DeliverySchedule,
   LatLng,
   PaymentMethod,
   ScheduleAvailability,
-} from '../../types'
-import { useAuth } from '../../contexts/AuthContext'
-import { useToast } from '../../contexts/ToastContext'
-import { usePublicConfig } from '../../hooks/usePublicConfig'
-import { createOrder } from '../../services/orders'
-import { getScheduleAvailability } from '../../services/settings'
+} from "../../types";
+import { useAuth } from "../../contexts/AuthContext";
+import { useToast } from "../../contexts/ToastContext";
+import { usePublicConfig } from "../../hooks/usePublicConfig";
+import { createOrder } from "../../services/orders";
+import { getScheduleAvailability } from "../../services/settings";
 import {
   getBrowserLocation,
   getRoadRoute,
   reverseGeocode,
-} from '../../services/maps'
-import { calculateOrderTotals, minimumQuantityForDistance } from '../../utils/calculations'
+} from "../../services/maps";
 import {
-  DELIVERY_DAYS_AHEAD,
-  PRODUCT_NAME,
-} from '../../utils/constants'
+  calculateOrderTotals,
+  minimumQuantityForDistance,
+} from "../../utils/calculations";
+import { DELIVERY_DAYS_AHEAD, PRODUCT_NAME } from "../../utils/constants";
 import {
   buildDeliveryDates,
   dayKey,
   formatDeliveryDate,
   formatTimeRange,
   isWindowInThePast,
-} from '../../utils/dates'
-import { getErrorMessage } from '../../utils/errors'
-import { formatPeso } from '../../utils/money'
+} from "../../utils/dates";
+import { getErrorMessage } from "../../utils/errors";
+import { formatPeso } from "../../utils/money";
 import {
   Alert,
   Card,
@@ -53,152 +53,149 @@ import {
   PageHeader,
   Select,
   Textarea,
-} from '../../components/common/ui'
-import { Button } from '../../components/common/Button'
-import { MapPicker } from '../../components/common/MapPicker'
+} from "../../components/common/ui";
+import { Button } from "../../components/common/Button";
+import { MapPicker } from "../../components/common/MapPicker";
 
 interface ScheduleOption {
-  schedule: DeliverySchedule
-  slotsLeft: number
-  full: boolean
+  schedule: DeliverySchedule;
+  slotsLeft: number;
+  full: boolean;
 }
 
 export function CustomerOrderWaterPage() {
-  const { profile } = useAuth()
-  const navigate = useNavigate()
-  const toast = useToast()
+  const { profile } = useAuth();
+  const navigate = useNavigate();
+  const toast = useToast();
   const {
     config,
     loading: configLoading,
     error: configError,
     reload: reloadConfig,
-  } = usePublicConfig()
+  } = usePublicConfig();
 
-  const [point, setPoint] = useState<LatLng | null>(null)
-  const [address, setAddress] = useState('')
-  const [geocoding, setGeocoding] = useState(false)
-  const [distance, setDistance] = useState<number | null>(null)
+  const [point, setPoint] = useState<LatLng | null>(null);
+  const [address, setAddress] = useState("");
+  const [geocoding, setGeocoding] = useState(false);
+  const [distance, setDistance] = useState<number | null>(null);
   const [distanceState, setDistanceState] = useState<
-    'idle' | 'loading' | 'success' | 'error'
-  >('idle')
-  const [distanceError, setDistanceError] = useState<string | null>(null)
-  const [retryKey, setRetryKey] = useState(0)
+    "idle" | "loading" | "success" | "error"
+  >("idle");
+  const [distanceError, setDistanceError] = useState<string | null>(null);
+  const [retryKey, setRetryKey] = useState(0);
 
-  const [quantity, setQuantity] = useState(1)
-  const [containerType, setContainerType] =
-    useState<ContainerType>('exchange')
-  const [deliveryDate, setDeliveryDate] = useState('')
-  const [scheduleId, setScheduleId] = useState<number | ''>('')
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cod')
-  const [instructions, setInstructions] = useState('')
+  const [quantity, setQuantity] = useState(1);
+  const [containerType, setContainerType] = useState<ContainerType>("exchange");
+  const [deliveryDate, setDeliveryDate] = useState("");
+  const [scheduleId, setScheduleId] = useState<number | "">("");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cod");
+  const [instructions, setInstructions] = useState("");
 
-  const [availability, setAvailability] = useState<
-    Record<string, number>
-  >({})
-  const [submitting, setSubmitting] = useState(false)
-  const [formError, setFormError] = useState<string | null>(null)
+  const [availability, setAvailability] = useState<Record<string, number>>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
-  const geocodeRequest = useRef(0)
+  const geocodeRequest = useRef(0);
   const station = useMemo(
     () =>
       config
         ? { lat: config.station.latitude, lng: config.station.longitude }
         : null,
     [config],
-  )
+  );
 
   // Road distance from the station to the selected pin.
   useEffect(() => {
     if (!point || !station) {
-      setDistance(null)
-      setDistanceState('idle')
-      return
+      setDistance(null);
+      setDistanceState("idle");
+      return;
     }
 
-    const controller = new AbortController()
-    setDistanceState('loading')
-    setDistanceError(null)
+    const controller = new AbortController();
+    setDistanceState("loading");
+    setDistanceError(null);
 
     getRoadRoute(station, point, controller.signal)
       .then((route) => {
-        setDistance(route.distanceKm)
-        setDistanceState('success')
+        setDistance(route.distanceKm);
+        setDistanceState("success");
       })
       .catch((error) => {
-        if ((error as Error).name === 'AbortError') return
-        setDistance(null)
-        setDistanceState('error')
-        setDistanceError(getErrorMessage(error))
-      })
+        if ((error as Error).name === "AbortError") return;
+        setDistance(null);
+        setDistanceState("error");
+        setDistanceError(getErrorMessage(error));
+      });
 
-    return () => controller.abort()
-  }, [point, station, retryKey])
+    return () => controller.abort();
+  }, [point, station, retryKey]);
 
   // Fill in the address after dropping a pin.
   useEffect(() => {
-    if (!point) return
-    const controller = new AbortController()
-    const requestId = ++geocodeRequest.current
-    setGeocoding(true)
+    if (!point) return;
+    const controller = new AbortController();
+    const requestId = ++geocodeRequest.current;
+    setGeocoding(true);
 
     reverseGeocode(point, controller.signal)
       .then((result) => {
         if (requestId === geocodeRequest.current && result) {
-          setAddress(result)
+          setAddress(result);
         }
       })
       .catch(() => undefined)
       .finally(() => {
-        if (requestId === geocodeRequest.current) setGeocoding(false)
-      })
+        if (requestId === geocodeRequest.current) setGeocoding(false);
+      });
 
-    return () => controller.abort()
-  }, [point])
+    return () => controller.abort();
+  }, [point]);
 
   // Slot capacity for the next two weeks.
   useEffect(() => {
-    if (!config) return
-    const dates = buildDeliveryDates(DELIVERY_DAYS_AHEAD)
-    let cancelled = false
+    if (!config) return;
+    const dates = buildDeliveryDates(DELIVERY_DAYS_AHEAD);
+    let cancelled = false;
 
     getScheduleAvailability(dates[0].value, dates[dates.length - 1].value)
       .then((rows: ScheduleAvailability[]) => {
-        if (cancelled) return
-        const map: Record<string, number> = {}
+        if (cancelled) return;
+        const map: Record<string, number> = {};
         rows.forEach((row) => {
-          map[dayKey(row.schedule_id, row.delivery_date)] = Number(row.booked)
-        })
-        setAvailability(map)
+          map[dayKey(row.schedule_id, row.delivery_date)] = Number(row.booked);
+        });
+        setAvailability(map);
       })
       .catch(() => {
         // Capacity display is best-effort. The database validates it again.
-      })
+      });
 
     return () => {
-      cancelled = true
-    }
-  }, [config])
+      cancelled = true;
+    };
+  }, [config]);
 
   const dateOptions = useMemo(() => {
-    if (!config) return []
+    if (!config) return [];
     return buildDeliveryDates(DELIVERY_DAYS_AHEAD).filter((option) =>
       config.schedules.some(
         (schedule) =>
           schedule.day_of_week === option.dayOfWeek &&
           !isWindowInThePast(option.value, schedule.end_time),
       ),
-    )
-  }, [config])
+    );
+  }, [config]);
 
   useEffect(() => {
     if (!deliveryDate && dateOptions.length > 0) {
-      setDeliveryDate(dateOptions[0].value)
+      setDeliveryDate(dateOptions[0].value);
     }
-  }, [deliveryDate, dateOptions])
+  }, [deliveryDate, dateOptions]);
 
   const scheduleOptions = useMemo<ScheduleOption[]>(() => {
-    if (!config || !deliveryDate) return []
-    const weekday = new Date(`${deliveryDate}T00:00:00`).getDay()
+    if (!config || !deliveryDate) return [];
+    const weekday = new Date(`${deliveryDate}T00:00:00`).getDay();
 
     return config.schedules
       .filter(
@@ -207,124 +204,120 @@ export function CustomerOrderWaterPage() {
           !isWindowInThePast(deliveryDate, schedule.end_time),
       )
       .map((schedule) => {
-        const booked = availability[dayKey(schedule.id, deliveryDate)] ?? 0
-        const slotsLeft = Math.max(schedule.max_orders - booked, 0)
-        return { schedule, slotsLeft, full: slotsLeft === 0 }
-      })
-  }, [config, deliveryDate, availability])
+        const booked = availability[dayKey(schedule.id, deliveryDate)] ?? 0;
+        const slotsLeft = Math.max(schedule.max_orders - booked, 0);
+        return { schedule, slotsLeft, full: slotsLeft === 0 };
+      });
+  }, [config, deliveryDate, availability]);
 
   useEffect(() => {
-    if (!deliveryDate) return
+    if (!deliveryDate) return;
     const current = scheduleOptions.find(
       (option) => option.schedule.id === scheduleId && !option.full,
-    )
+    );
     if (!current) {
       setScheduleId(
-        scheduleOptions.find((option) => !option.full)?.schedule.id ?? '',
-      )
+        scheduleOptions.find((option) => !option.full)?.schedule.id ?? "",
+      );
     }
-  }, [deliveryDate, scheduleOptions, scheduleId])
+  }, [deliveryDate, scheduleOptions, scheduleId]);
 
   const selectedScheduleOption = scheduleOptions.find(
     (option) => option.schedule.id === scheduleId,
-  )
+  );
 
   const minimumQuantity = useMemo(
-    () =>
-      minimumQuantityForDistance(
-        distance,
-        config?.distanceRules ?? [],
-      ),
+    () => minimumQuantityForDistance(distance, config?.distanceRules ?? []),
     [distance, config],
-  )
+  );
 
-  const maxDistance = config?.station.max_delivery_distance_km ?? 0
+  const maxDistance = config?.station.max_delivery_distance_km ?? 0;
   const beyondMaxDistance =
-    distance !== null && maxDistance > 0 && distance > maxDistance
-  const ruleMissing =
-    distanceState === 'success' && minimumQuantity === null
-  const belowMinimum =
-    minimumQuantity !== null && quantity < minimumQuantity
+    distance !== null && maxDistance > 0 && distance > maxDistance;
+  const ruleMissing = distanceState === "success" && minimumQuantity === null;
+  const belowMinimum = minimumQuantity !== null && quantity < minimumQuantity;
 
   const totals = useMemo(() => {
-    if (!config) return null
+    if (!config) return null;
     return calculateOrderTotals({
       waterQuantity: quantity,
       containerType,
       waterPrice: config.pricing.water_price,
       containerPrice: config.pricing.container_price,
       deliveryFee: config.pricing.delivery_fee,
-    })
-  }, [config, quantity, containerType])
+    });
+  }, [config, quantity, containerType]);
 
   const handlePick = (nextPoint: LatLng) => {
-    setPoint(nextPoint)
-    setFormError(null)
-  }
+    setPoint(nextPoint);
+    setFormError(null);
+  };
 
   const handleUseLocation = async () => {
     try {
-      const location = await getBrowserLocation()
-      setPoint(location)
-      toast.success('Current location selected. Adjust the pin if needed.')
+      const location = await getBrowserLocation();
+      setPoint(location);
+      toast.success("Current location selected. Adjust the pin if needed.");
     } catch (locationError) {
-      toast.error(getErrorMessage(locationError))
+      toast.error(getErrorMessage(locationError));
     }
-  }
+  };
 
   const handleSubmit = async () => {
-    setFormError(null)
+    setFormError(null);
 
     if (!profile || !config) {
-      setFormError('Your account or station configuration is not ready.')
-      return
+      setFormError("Your account or station configuration is not ready.");
+      return;
     }
     if (!point) {
-      setFormError('Pin your delivery location on the map.')
-      return
+      setFormError("Pin your delivery location on the map.");
+      return;
     }
-    if (distanceState === 'loading') {
-      setFormError('Please wait while the road distance is calculated.')
-      return
+    if (distanceState === "loading") {
+      setFormError("Please wait while the road distance is calculated.");
+      return;
     }
-    if (distanceState === 'error' || distance === null) {
+    if (distanceState === "error" || distance === null) {
       setFormError(
-        'The road distance could not be calculated. Retry before placing the order.',
-      )
-      return
+        "The road distance could not be calculated. Retry before placing the order.",
+      );
+      return;
     }
     if (beyondMaxDistance) {
       setFormError(
         `This address is ${distance} km away, beyond the maximum delivery distance of ${maxDistance} km.`,
-      )
-      return
+      );
+      return;
     }
     if (minimumQuantity === null) {
       setFormError(
-        'No delivery minimum applies to this distance. Please contact the station.',
-      )
-      return
+        "No delivery minimum applies to this distance. Please contact the station.",
+      );
+      return;
     }
     if (belowMinimum) {
       setFormError(
         `This location requires a minimum order of ${minimumQuantity} containers. Please add ${minimumQuantity - quantity} more container(s) to continue.`,
-      )
-      return
+      );
+      return;
     }
     if (!address.trim()) {
-      setFormError('Enter your delivery address.')
-      return
+      setFormError("Enter your delivery address.");
+      return;
     }
     if (!deliveryDate || !selectedScheduleOption) {
-      setFormError('Select an available delivery date and time window.')
-      return
+      setFormError("Select an available delivery date and time window.");
+      return;
     }
     if (selectedScheduleOption.full) {
-      setFormError('The selected delivery window is already full. Choose another.')
-      return
+      setFormError(
+        "The selected delivery window is already full. Choose another.",
+      );
+      return;
     }
 
-    setSubmitting(true)
+    setSubmitting(true);
     try {
       const order = await createOrder({
         customerId: profile.id,
@@ -338,36 +331,38 @@ export function CustomerOrderWaterPage() {
         containerType,
         deliveryDistanceKm: distance,
         paymentMethod,
-      })
+      });
 
-      if (paymentMethod === 'stripe') {
-        toast.success('Order created. Complete your payment to confirm it.')
-        navigate(`/customer/checkout/${order.id}`)
+      if (paymentMethod === "stripe") {
+        toast.success("Order created. Complete your payment to confirm it.");
+        navigate(`/customer/checkout/${order.id}`);
       } else {
-        toast.success('Order placed! Pay the driver when it arrives.')
-        navigate(`/customer/orders/${order.id}?placed=1`)
+        toast.success("Order placed! Pay the driver when it arrives.");
+        navigate(`/customer/orders/${order.id}?placed=1`);
       }
     } catch (submitError) {
-      const message = getErrorMessage(submitError)
-      setFormError(message)
-      toast.error(message)
+      const message = getErrorMessage(submitError);
+      setFormError(message);
+      toast.error(message);
       // Refresh capacity after a rejected order (for example a full window).
       void getScheduleAvailability(
         buildDeliveryDates(DELIVERY_DAYS_AHEAD)[0].value,
         buildDeliveryDates(DELIVERY_DAYS_AHEAD)[DELIVERY_DAYS_AHEAD - 1].value,
       )
         .then((rows: ScheduleAvailability[]) => {
-          const map: Record<string, number> = {}
+          const map: Record<string, number> = {};
           rows.forEach((row) => {
-            map[dayKey(row.schedule_id, row.delivery_date)] = Number(row.booked)
-          })
-          setAvailability(map)
+            map[dayKey(row.schedule_id, row.delivery_date)] = Number(
+              row.booked,
+            );
+          });
+          setAvailability(map);
         })
-        .catch(() => undefined)
+        .catch(() => undefined);
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
-  }
+  };
 
   if (configLoading) {
     return (
@@ -377,14 +372,14 @@ export function CustomerOrderWaterPage() {
           Loading products and delivery rules…
         </p>
       </div>
-    )
+    );
   }
 
   if (configError || !config) {
     return (
       <div className="space-y-4">
         <Alert tone="error" title="Could not load station configuration">
-          {configError ?? 'The station is not configured yet.'}
+          {configError ?? "The station is not configured yet."}
         </Alert>
         <Button
           variant="outline"
@@ -394,12 +389,12 @@ export function CustomerOrderWaterPage() {
           Try again
         </Button>
       </div>
-    )
+    );
   }
 
   const canSubmit =
     Boolean(point) &&
-    distanceState === 'success' &&
+    distanceState === "success" &&
     distance !== null &&
     !beyondMaxDistance &&
     minimumQuantity !== null &&
@@ -409,7 +404,7 @@ export function CustomerOrderWaterPage() {
     Boolean(selectedScheduleOption) &&
     !selectedScheduleOption?.full &&
     Boolean(profile) &&
-    !submitting
+    !submitting;
 
   return (
     <div className="space-y-5">
@@ -459,12 +454,12 @@ export function CustomerOrderWaterPage() {
               />
             </div>
 
-            {distanceState === 'loading' ? (
+            {distanceState === "loading" ? (
               <div className="mt-3 flex items-center gap-2 rounded-lg bg-brand-50 px-3 py-2.5 text-sm text-brand-800">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Calculating road distance from the station…
               </div>
-            ) : distanceState === 'error' ? (
+            ) : distanceState === "error" ? (
               <div className="mt-3">
                 <Alert
                   tone="error"
@@ -481,21 +476,21 @@ export function CustomerOrderWaterPage() {
                   }
                 >
                   {distanceError ??
-                    'The routing service could not be reached. Retry to continue.'}
+                    "The routing service could not be reached. Retry to continue."}
                 </Alert>
               </div>
-            ) : distanceState === 'success' && distance !== null ? (
+            ) : distanceState === "success" && distance !== null ? (
               <div className="mt-3 space-y-2">
                 <div
                   className={`flex flex-wrap items-center justify-between gap-2 rounded-xl border px-3.5 py-3 ${
                     beyondMaxDistance
-                      ? 'border-rose-200 bg-rose-50'
-                      : 'border-emerald-200 bg-emerald-50'
+                      ? "border-rose-200 bg-rose-50"
+                      : "border-emerald-200 bg-emerald-50"
                   }`}
                 >
                   <div className="flex items-center gap-2 text-sm">
                     <Route
-                      className={`h-4 w-4 ${beyondMaxDistance ? 'text-rose-600' : 'text-emerald-600'}`}
+                      className={`h-4 w-4 ${beyondMaxDistance ? "text-rose-600" : "text-emerald-600"}`}
                     />
                     <span className="font-semibold text-slate-900">
                       {distance} km by road
@@ -519,7 +514,7 @@ export function CustomerOrderWaterPage() {
                 {minimumQuantity !== null && !beyondMaxDistance ? (
                   belowMinimum ? (
                     <Alert tone="warning">
-                      Your location requires a minimum order of{' '}
+                      Your location requires a minimum order of{" "}
                       <span className="font-semibold">
                         {minimumQuantity} containers
                       </span>
@@ -536,9 +531,8 @@ export function CustomerOrderWaterPage() {
 
                 {beyondMaxDistance ? (
                   <Alert tone="error">
-                    This address is outside the station’s{' '}
-                    {maxDistance} km delivery range. Move the pin closer to the
-                    station.
+                    This address is outside the station’s {maxDistance} km
+                    delivery range. Move the pin closer to the station.
                   </Alert>
                 ) : null}
                 {ruleMissing ? (
@@ -561,8 +555,8 @@ export function CustomerOrderWaterPage() {
                 htmlFor="delivery-address"
                 hint={
                   geocoding
-                    ? 'Looking up the address from your pin…'
-                    : 'Edit the address if the pin lookup needs adjustment.'
+                    ? "Looking up the address from your pin…"
+                    : "Edit the address if the pin lookup needs adjustment."
                 }
                 required
               >
@@ -596,18 +590,18 @@ export function CustomerOrderWaterPage() {
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
               <button
                 type="button"
-                onClick={() => setContainerType('exchange')}
+                onClick={() => setContainerType("exchange")}
                 className={`rounded-xl border p-4 text-left transition ${
-                  containerType === 'exchange'
-                    ? 'border-brand-500 bg-brand-50 ring-2 ring-brand-100'
-                    : 'border-slate-200 hover:border-slate-300'
+                  containerType === "exchange"
+                    ? "border-brand-500 bg-brand-50 ring-2 ring-brand-100"
+                    : "border-slate-200 hover:border-slate-300"
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-semibold text-slate-900">
                     Exchange empty container
                   </p>
-                  {containerType === 'exchange' ? (
+                  {containerType === "exchange" ? (
                     <CheckCircle2 className="h-4 w-4 text-brand-600" />
                   ) : null}
                 </div>
@@ -622,18 +616,18 @@ export function CustomerOrderWaterPage() {
 
               <button
                 type="button"
-                onClick={() => setContainerType('new')}
+                onClick={() => setContainerType("new")}
                 className={`rounded-xl border p-4 text-left transition ${
-                  containerType === 'new'
-                    ? 'border-brand-500 bg-brand-50 ring-2 ring-brand-100'
-                    : 'border-slate-200 hover:border-slate-300'
+                  containerType === "new"
+                    ? "border-brand-500 bg-brand-50 ring-2 ring-brand-100"
+                    : "border-slate-200 hover:border-slate-300"
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-semibold text-slate-900">
                     Purchase new container
                   </p>
-                  {containerType === 'new' ? (
+                  {containerType === "new" ? (
                     <CheckCircle2 className="h-4 w-4 text-brand-600" />
                   ) : null}
                 </div>
@@ -645,7 +639,7 @@ export function CustomerOrderWaterPage() {
                   {formatPeso(
                     Number(config.pricing.water_price) +
                       Number(config.pricing.container_price),
-                  )}{' '}
+                  )}{" "}
                   each
                 </p>
               </button>
@@ -678,7 +672,10 @@ export function CustomerOrderWaterPage() {
                     value={quantity}
                     onChange={(event) =>
                       setQuantity(
-                        Math.max(1, Math.floor(Number(event.target.value) || 1)),
+                        Math.max(
+                          1,
+                          Math.floor(Number(event.target.value) || 1),
+                        ),
                       )
                     }
                     className="h-10 w-16 border-x border-slate-200 text-center text-sm font-semibold text-slate-900 focus:outline-none"
@@ -728,17 +725,13 @@ export function CustomerOrderWaterPage() {
               </div>
             ) : (
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                <Field
-                  label="Delivery date"
-                  htmlFor="delivery-date"
-                  required
-                >
+                <Field label="Delivery date" htmlFor="delivery-date" required>
                   <Select
                     id="delivery-date"
                     value={deliveryDate}
                     onChange={(event) => {
-                      setDeliveryDate(event.target.value)
-                      setScheduleId('')
+                      setDeliveryDate(event.target.value);
+                      setScheduleId("");
                     }}
                   >
                     {dateOptions.map((option) => (
@@ -759,7 +752,7 @@ export function CustomerOrderWaterPage() {
                     value={scheduleId}
                     onChange={(event) =>
                       setScheduleId(
-                        event.target.value ? Number(event.target.value) : '',
+                        event.target.value ? Number(event.target.value) : "",
                       )
                     }
                     disabled={scheduleOptions.length === 0}
@@ -778,7 +771,7 @@ export function CustomerOrderWaterPage() {
                             option.schedule.end_time,
                           )}
                           {option.full
-                            ? ' — Full'
+                            ? " — Full"
                             : ` — ${option.slotsLeft} slot(s) left`}
                         </option>
                       ))
@@ -797,7 +790,7 @@ export function CustomerOrderWaterPage() {
                       selectedScheduleOption.schedule.start_time,
                       selectedScheduleOption.schedule.end_time,
                     )}`
-                  : ''}
+                  : ""}
               </p>
             ) : null}
 
@@ -805,7 +798,7 @@ export function CustomerOrderWaterPage() {
               <Field
                 label="Delivery instructions"
                 htmlFor="delivery-instructions"
-                hint="Optional — gate code, landmark, who to ask for."
+                hint="Optional gate code, landmark, or other delivery notes."
               >
                 <Textarea
                   id="delivery-instructions"
@@ -828,18 +821,18 @@ export function CustomerOrderWaterPage() {
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <button
                 type="button"
-                onClick={() => setPaymentMethod('cod')}
+                onClick={() => setPaymentMethod("cod")}
                 className={`rounded-xl border p-4 text-left transition ${
-                  paymentMethod === 'cod'
-                    ? 'border-brand-500 bg-brand-50 ring-2 ring-brand-100'
-                    : 'border-slate-200 hover:border-slate-300'
+                  paymentMethod === "cod"
+                    ? "border-brand-500 bg-brand-50 ring-2 ring-brand-100"
+                    : "border-slate-200 hover:border-slate-300"
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-semibold text-slate-900">
                     Cash on Delivery
                   </p>
-                  {paymentMethod === 'cod' ? (
+                  {paymentMethod === "cod" ? (
                     <CheckCircle2 className="h-4 w-4 text-brand-600" />
                   ) : null}
                 </div>
@@ -851,18 +844,18 @@ export function CustomerOrderWaterPage() {
 
               <button
                 type="button"
-                onClick={() => setPaymentMethod('stripe')}
+                onClick={() => setPaymentMethod("stripe")}
                 className={`rounded-xl border p-4 text-left transition ${
-                  paymentMethod === 'stripe'
-                    ? 'border-brand-500 bg-brand-50 ring-2 ring-brand-100'
-                    : 'border-slate-200 hover:border-slate-300'
+                  paymentMethod === "stripe"
+                    ? "border-brand-500 bg-brand-50 ring-2 ring-brand-100"
+                    : "border-slate-200 hover:border-slate-300"
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-semibold text-slate-900">
                     Pay online
                   </p>
-                  {paymentMethod === 'stripe' ? (
+                  {paymentMethod === "stripe" ? (
                     <CheckCircle2 className="h-4 w-4 text-brand-600" />
                   ) : null}
                 </div>
@@ -903,7 +896,7 @@ export function CustomerOrderWaterPage() {
               <div className="flex justify-between gap-3">
                 <span className="text-slate-500">Container type</span>
                 <span className="text-right font-medium text-slate-900">
-                  {containerType === 'new' ? 'New container' : 'Exchange'}
+                  {containerType === "new" ? "New container" : "Exchange"}
                 </span>
               </div>
 
@@ -925,16 +918,14 @@ export function CustomerOrderWaterPage() {
               <div className="border-t border-slate-100 pt-3">
                 <div className="flex justify-between gap-3 text-slate-500">
                   <span>Road distance</span>
-                  <span>
-                    {distance !== null ? `${distance} km` : '—'}
-                  </span>
+                  <span>{distance !== null ? `${distance} km` : "—"}</span>
                 </div>
                 <div className="mt-1.5 flex justify-between gap-3 text-slate-500">
                   <span>Minimum required</span>
                   <span>
                     {minimumQuantity !== null
                       ? `${minimumQuantity} containers`
-                      : '—'}
+                      : "—"}
                   </span>
                 </div>
               </div>
@@ -943,7 +934,7 @@ export function CustomerOrderWaterPage() {
                 <div className="flex justify-between gap-3 text-slate-500">
                   <span>Delivery date</span>
                   <span className="text-right">
-                    {deliveryDate ? formatDeliveryDate(deliveryDate) : '—'}
+                    {deliveryDate ? formatDeliveryDate(deliveryDate) : "—"}
                   </span>
                 </div>
                 <div className="mt-1.5 flex justify-between gap-3 text-slate-500">
@@ -954,19 +945,19 @@ export function CustomerOrderWaterPage() {
                           selectedScheduleOption.schedule.start_time,
                           selectedScheduleOption.schedule.end_time,
                         )
-                      : '—'}
+                      : "—"}
                   </span>
                 </div>
                 <div className="mt-1.5 flex justify-between gap-3 text-slate-500">
                   <span>Address</span>
                   <span className="max-w-[190px] text-right text-xs">
-                    {address.trim() || '—'}
+                    {address.trim() || "—"}
                   </span>
                 </div>
                 <div className="mt-1.5 flex justify-between gap-3 text-slate-500">
                   <span>Payment</span>
                   <span className="text-right">
-                    {paymentMethod === 'cod' ? 'Cash on Delivery' : 'Stripe'}
+                    {paymentMethod === "cod" ? "Cash on Delivery" : "Stripe"}
                   </span>
                 </div>
               </div>
@@ -996,9 +987,9 @@ export function CustomerOrderWaterPage() {
                 disabled={!canSubmit}
                 icon={<ArrowRight className="h-4 w-4" />}
               >
-                {paymentMethod === 'cod'
-                  ? 'Place order — Cash on Delivery'
-                  : 'Continue to secure payment'}
+                {paymentMethod === "cod"
+                  ? "Place order — Cash on Delivery"
+                  : "Continue to secure payment"}
               </Button>
               <p className="mt-2 text-center text-[11px] leading-relaxed text-slate-400">
                 By placing this order you agree to provide accurate delivery
@@ -1025,5 +1016,5 @@ export function CustomerOrderWaterPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

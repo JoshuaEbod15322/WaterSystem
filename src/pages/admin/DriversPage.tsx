@@ -1,24 +1,21 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   Mail,
   Phone,
   Plus,
   RefreshCw,
   Search,
-  ShieldCheck,
+  // ShieldCheck,
   Truck,
   UserCheck,
   UserX,
-} from 'lucide-react'
-import type { OrderWithRelations, Profile } from '../../types'
-import {
-  listDrivers,
-  setProfileActive,
-} from '../../services/drivers'
-import { listAdminOrders } from '../../services/orders'
-import { useToast } from '../../contexts/ToastContext'
-import { getErrorMessage } from '../../utils/errors'
+} from "lucide-react";
+import type { OrderWithRelations, Profile } from "../../types";
+import { listDrivers, setProfileActive } from "../../services/drivers";
+import { listAdminOrders } from "../../services/orders";
+import { useToast } from "../../contexts/ToastContext";
+import { getErrorMessage } from "../../utils/errors";
 import {
   Alert,
   Card,
@@ -28,96 +25,96 @@ import {
   PageHeader,
   Spinner,
   StatCard,
-} from '../../components/common/ui'
-import { Button } from '../../components/common/Button'
-import { DriverFormModal } from '../../components/admin/DriverFormModal'
+} from "../../components/common/ui";
+import { Button } from "../../components/common/Button";
+import { DriverFormModal } from "../../components/admin/DriverFormModal";
 
 export function AdminDriversPage() {
-  const [drivers, setDrivers] = useState<Profile[]>([])
-  const [orders, setOrders] = useState<OrderWithRelations[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [search, setSearch] = useState('')
-  const [formOpen, setFormOpen] = useState(false)
-  const [editingDriver, setEditingDriver] = useState<Profile | null>(null)
-  const [toggleTarget, setToggleTarget] = useState<Profile | null>(null)
-  const [saving, setSaving] = useState(false)
-  const toast = useToast()
+  const [drivers, setDrivers] = useState<Profile[]>([]);
+  const [orders, setOrders] = useState<OrderWithRelations[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingDriver, setEditingDriver] = useState<Profile | null>(null);
+  const [toggleTarget, setToggleTarget] = useState<Profile | null>(null);
+  const [saving, setSaving] = useState(false);
+  const toast = useToast();
 
   const load = useCallback(async (silent = false) => {
-    if (!silent) setLoading(true)
-    setError(null)
+    if (!silent) setLoading(true);
+    setError(null);
     try {
       const [nextDrivers, nextOrders] = await Promise.all([
         listDrivers(),
         listAdminOrders(),
-      ])
-      setDrivers(nextDrivers)
-      setOrders(nextOrders)
+      ]);
+      setDrivers(nextDrivers);
+      setOrders(nextOrders);
     } catch (loadError) {
-      setError(getErrorMessage(loadError))
+      setError(getErrorMessage(loadError));
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    void load()
-  }, [load])
+    void load();
+  }, [load]);
 
   const driverStats = useMemo(() => {
     const map = new Map<
       string,
       { active: number; delivered: number; total: number }
-    >()
+    >();
     orders.forEach((order) => {
-      if (!order.driver_id) return
+      if (!order.driver_id) return;
       const current = map.get(order.driver_id) ?? {
         active: 0,
         delivered: 0,
         total: 0,
+      };
+      current.total += 1;
+      if (order.order_status === "delivered") current.delivered += 1;
+      if (order.order_status === "out_for_delivery") {
+        current.active += 1;
       }
-      current.total += 1
-      if (order.order_status === 'delivered') current.delivered += 1
-      if (order.order_status === 'out_for_delivery') {
-        current.active += 1
-      }
-      map.set(order.driver_id, current)
-    })
-    return map
-  }, [orders])
+      map.set(order.driver_id, current);
+    });
+    return map;
+  }, [orders]);
 
   const filtered = useMemo(() => {
-    const term = search.trim().toLowerCase()
-    if (!term) return drivers
+    const term = search.trim().toLowerCase();
+    if (!term) return drivers;
     return drivers.filter(
       (driver) =>
         driver.full_name.toLowerCase().includes(term) ||
         driver.email.toLowerCase().includes(term) ||
-        (driver.phone ?? '').toLowerCase().includes(term),
-    )
-  }, [drivers, search])
+        (driver.phone ?? "").toLowerCase().includes(term),
+    );
+  }, [drivers, search]);
 
-  const activeCount = drivers.filter((driver) => driver.is_active).length
+  const activeCount = drivers.filter((driver) => driver.is_active).length;
 
   const handleToggle = async () => {
-    if (!toggleTarget) return
-    setSaving(true)
+    if (!toggleTarget) return;
+    setSaving(true);
     try {
-      await setProfileActive(toggleTarget.id, !toggleTarget.is_active)
+      await setProfileActive(toggleTarget.id, !toggleTarget.is_active);
       toast.success(
         `${toggleTarget.full_name} has been ${
-          toggleTarget.is_active ? 'deactivated' : 'reactivated'
+          toggleTarget.is_active ? "deactivated" : "reactivated"
         }.`,
-      )
-      setToggleTarget(null)
-      await load(true)
+      );
+      setToggleTarget(null);
+      await load(true);
     } catch (toggleError) {
-      toast.error(getErrorMessage(toggleError))
+      toast.error(getErrorMessage(toggleError));
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   return (
     <div className="space-y-5">
@@ -137,8 +134,8 @@ export function AdminDriversPage() {
             <Button
               icon={<Plus className="h-4 w-4" />}
               onClick={() => {
-                setEditingDriver(null)
-                setFormOpen(true)
+                setEditingDriver(null);
+                setFormOpen(true);
               }}
             >
               Create driver
@@ -187,19 +184,19 @@ export function AdminDriversPage() {
       ) : filtered.length === 0 ? (
         <EmptyState
           icon={Truck}
-          title={search ? 'No matching drivers' : 'No drivers yet'}
+          title={search ? "No matching drivers" : "No drivers yet"}
           description={
             search
-              ? 'Try a different name, email or phone number.'
-              : 'Create the first driver account so drivers can accept pending deliveries.'
+              ? "Try a different name, email or phone number."
+              : "Create the first driver account so drivers can accept pending deliveries."
           }
           action={
             !search ? (
               <Button
                 icon={<Plus className="h-4 w-4" />}
                 onClick={() => {
-                  setEditingDriver(null)
-                  setFormOpen(true)
+                  setEditingDriver(null);
+                  setFormOpen(true);
                 }}
               >
                 Create driver
@@ -214,36 +211,36 @@ export function AdminDriversPage() {
               active: 0,
               delivered: 0,
               total: 0,
-            }
+            };
             return (
               <Card key={driver.id} className="p-5">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <div className="flex h-11 w-11 items-center justify-center rounded-full bg-violet-100 text-base font-bold text-violet-700">
-                      {driver.full_name.charAt(0).toUpperCase() || 'D'}
+                      {driver.full_name.charAt(0).toUpperCase() || "D"}
                     </div>
                     <div>
                       <p className="font-semibold text-slate-900">
                         {driver.full_name}
                       </p>
                       <p className="text-xs text-slate-400">
-                        {driver.is_active ? 'Active driver' : 'Deactivated'}
+                        {driver.is_active ? "Active driver" : "Deactivated"}
                       </p>
                     </div>
                   </div>
                   <span
                     className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${
                       driver.is_active
-                        ? 'bg-emerald-100 text-emerald-800 ring-emerald-200'
-                        : 'bg-slate-100 text-slate-600 ring-slate-200'
+                        ? "bg-emerald-100 text-emerald-800 ring-emerald-200"
+                        : "bg-slate-100 text-slate-600 ring-slate-200"
                     }`}
                   >
                     <span
                       className={`h-1.5 w-1.5 rounded-full ${
-                        driver.is_active ? 'bg-emerald-500' : 'bg-slate-400'
+                        driver.is_active ? "bg-emerald-500" : "bg-slate-400"
                       }`}
                     />
-                    {driver.is_active ? 'Active' : 'Inactive'}
+                    {driver.is_active ? "Active" : "Inactive"}
                   </span>
                 </div>
 
@@ -254,7 +251,7 @@ export function AdminDriversPage() {
                   </p>
                   <p className="flex items-center gap-2">
                     <Phone className="h-3.5 w-3.5 text-slate-400" />
-                    {driver.phone || 'No phone'}
+                    {driver.phone || "No phone"}
                   </p>
                 </div>
 
@@ -290,8 +287,8 @@ export function AdminDriversPage() {
                     size="sm"
                     variant="outline"
                     onClick={() => {
-                      setEditingDriver(driver)
-                      setFormOpen(true)
+                      setEditingDriver(driver);
+                      setFormOpen(true);
                     }}
                   >
                     Edit
@@ -301,7 +298,7 @@ export function AdminDriversPage() {
                     variant="outline"
                     onClick={() => setToggleTarget(driver)}
                   >
-                    {driver.is_active ? 'Deactivate' : 'Activate'}
+                    {driver.is_active ? "Deactivate" : "Activate"}
                   </Button>
                   <Link
                     to={`/admin/orders?driver=${driver.id}`}
@@ -311,21 +308,10 @@ export function AdminDriversPage() {
                   </Link>
                 </div>
               </Card>
-            )
+            );
           })}
         </div>
       )}
-
-      <div className="flex items-start gap-2 rounded-xl border border-brand-100 bg-brand-50 p-4 text-xs leading-relaxed text-brand-900">
-        <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />
-        <p>
-          Driver accounts are created by the admin-only{' '}
-          <code className="rounded bg-white/70 px-1">admin_create_driver</code>{' '}
-          database function after verifying your administrator role. The
-          password is hashed by Supabase Auth and never stored in the
-          application tables. Drivers sign in on the shared login page.
-        </p>
-      </div>
 
       <DriverFormModal
         open={formOpen}
@@ -337,19 +323,19 @@ export function AdminDriversPage() {
       <ConfirmDialog
         open={Boolean(toggleTarget)}
         title={
-          toggleTarget?.is_active ? 'Deactivate driver?' : 'Reactivate driver?'
+          toggleTarget?.is_active ? "Deactivate driver?" : "Reactivate driver?"
         }
         message={
           toggleTarget?.is_active
             ? `${toggleTarget.full_name} will no longer be able to sign in or update deliveries. Existing delivery history is kept.`
             : `${toggleTarget?.full_name} will be able to sign in and receive deliveries again.`
         }
-        confirmLabel={toggleTarget?.is_active ? 'Deactivate' : 'Reactivate'}
-        tone={toggleTarget?.is_active ? 'danger' : 'primary'}
+        confirmLabel={toggleTarget?.is_active ? "Deactivate" : "Reactivate"}
+        tone={toggleTarget?.is_active ? "danger" : "primary"}
         loading={saving}
         onConfirm={() => void handleToggle()}
         onClose={() => setToggleTarget(null)}
       />
     </div>
-  )
+  );
 }

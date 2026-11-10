@@ -397,19 +397,17 @@ function RoutePlanMap({
     }
   }, [stableOrigin, stops])
 
-  const destinations = useMemo<RouteMapDestination[]>(() => {
-    const sequences = new Map(
-      (optimized?.stops ?? []).map((stop) => [stop.id, stop.sequence]),
-    )
-    return orders.map((order) => ({
-      id: order.id,
-      label: `${order.order_code} · ${order.customer_name}`,
-      status: order.order_status,
-      lat: Number(order.delivery_latitude),
-      lng: Number(order.delivery_longitude),
-      sequence: sequences.get(order.id),
-    }))
-  }, [orders, optimized])
+  const destinations = useMemo<RouteMapDestination[]>(
+    () =>
+      orders.map((order) => ({
+        id: order.id,
+        label: `${order.order_code} · ${order.customer_name}`,
+        status: order.order_status,
+        lat: Number(order.delivery_latitude),
+        lng: Number(order.delivery_longitude),
+      })),
+    [orders],
+  )
 
   const routes = useMemo<RouteMapLine[]>(
     () =>
@@ -427,7 +425,6 @@ function RoutePlanMap({
         destinations={destinations}
         routes={routes}
         heightClass="h-80"
-        numberedPins={Boolean(optimized)}
       />
 
       {routing ? (
