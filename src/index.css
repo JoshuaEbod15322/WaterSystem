@@ -1,0 +1,122 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-50: #eff9ff;
+  --color-brand-100: #dbf1ff;
+  --color-brand-200: #bfe7ff;
+  --color-brand-300: #92d9ff;
+  --color-brand-400: #5fc3fc;
+  --color-brand-500: #38a6f8;
+  --color-brand-600: #2089ed;
+  --color-brand-700: #1a71d9;
+  --color-brand-800: #1c5caf;
+  --color-brand-900: #1d4f8a;
+  --color-ink-50: #f6f8fb;
+  --color-ink-900: #0f1f33;
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+  }
+
+  ::selection {
+    @apply bg-brand-200 text-brand-900;
+  }
+
+  button,
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* Leaflet sits below app chrome (modals, sticky headers). */
+.leaflet-container {
+  font-family: inherit;
+  z-index: 0;
+  background: #e2e8f0;
+}
+
+.leaflet-control-attribution {
+  font-size: 10px !important;
+}
+
+/* Thin, unobtrusive scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 9999px;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out both;
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.25s ease-out both;
+}
+
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.45);
+  }
+  70% {
+    box-shadow: 0 0 0 12px rgba(16, 185, 129, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+.driver-pulse {
+  animation: pulse-ring 2s infinite;
+}
+
+/* Animated dashes that travel along the highlighted delivery route. */
+@keyframes route-flow {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+
+.route-flow {
+  animation: route-flow 1.1s linear infinite;
+}
