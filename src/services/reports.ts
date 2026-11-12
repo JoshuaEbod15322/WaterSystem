@@ -6,10 +6,11 @@ export interface OrderCounts {
   pending: number
   active: number
   completed: number
+  cancelled: number
 }
 
 export async function getOrderCounts(): Promise<OrderCounts> {
-  const [total, pending, active, completed] = await Promise.all([
+  const [total, pending, active, completed, cancelled] = await Promise.all([
     supabase.from('orders').select('id', { count: 'exact', head: true }),
     supabase
       .from('orders')
@@ -23,10 +24,18 @@ export async function getOrderCounts(): Promise<OrderCounts> {
       .from('orders')
       .select('id', { count: 'exact', head: true })
       .eq('order_status', 'delivered'),
+    supabase
+      .from('orders')
+      .select('id', { count: 'exact', head: true })
+      .eq('order_status', 'cancelled'),
   ])
 
   const firstError =
-    total.error ?? pending.error ?? active.error ?? completed.error
+    total.error ??
+    pending.error ??
+    active.error ??
+    completed.error ??
+    cancelled.error
   if (firstError) throw new Error(firstError.message)
 
   return {
@@ -34,6 +43,7 @@ export async function getOrderCounts(): Promise<OrderCounts> {
     pending: pending.count ?? 0,
     active: active.count ?? 0,
     completed: completed.count ?? 0,
+    cancelled: cancelled.count ?? 0,
   }
 }
 

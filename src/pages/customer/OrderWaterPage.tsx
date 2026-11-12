@@ -28,6 +28,7 @@ import { usePublicConfig } from "../../hooks/usePublicConfig";
 import { createOrder } from "../../services/orders";
 import { getScheduleAvailability } from "../../services/settings";
 import {
+  geocodeAddress,
   getBrowserLocation,
   getRoadRoute,
   reverseGeocode,
@@ -77,6 +78,9 @@ export function CustomerOrderWaterPage() {
   const [point, setPoint] = useState<LatLng | null>(null);
   const [address, setAddress] = useState("");
   const [geocoding, setGeocoding] = useState(false);
+  const [defaultLookupError, setDefaultLookupError] = useState<string | null>(
+    null,
+  );
   const [distance, setDistance] = useState<number | null>(null);
   const [distanceState, setDistanceState] = useState<
     "idle" | "loading" | "success" | "error"
@@ -96,6 +100,7 @@ export function CustomerOrderWaterPage() {
   const [formError, setFormError] = useState<string | null>(null);
 
   const geocodeRequest = useRef(0);
+  const defaultLocationApplied = useRef(false);
   const station = useMemo(
     () =>
       config
@@ -103,6 +108,53 @@ export function CustomerOrderWaterPage() {
         : null,
     [config],
   );
+
+  // Prefill the customer's saved default location once per visit.
+  useEffect(() => {
+    if (!profile || defaultLocationApplied.current) return;
+
+    const savedAddress = (profile.address ?? "").trim();
+    if (savedAddress) {
+      setAddress((current) => current || savedAddress);
+    }
+
+    if (profile.latitude !== null && profile.longitude !== null) {
+      defaultLocationApplied.current = true;
+      setPoint({ lat: profile.latitude, lng: profile.longitude });
+      return;
+    }
+
+    if (!savedAddress) {
+      defaultLocationApplied.current = true;
+      return;
+    }
+
+    const controller = new AbortController();
+    setDefaultLookupError(null);
+
+    geocodeAddress(savedAddress, controller.signal)
+      .then((result) => {
+        if (defaultLocationApplied.current) return;
+        if (result) {
+          setPoint(result);
+        } else {
+          setDefaultLookupError(
+            "We could not locate your saved default address. Tap the map to pin your delivery location.",
+          );
+        }
+      })
+      .catch((lookupFailure) => {
+        if ((lookupFailure as Error).name === "AbortError") return;
+        if (!defaultLocationApplied.current) {
+          setDefaultLookupError(getErrorMessage(lookupFailure));
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) defaultLocationApplied.current = true;
+      });
+
+    return () => controller.abort();
+  }, [profile]);
 
   // Road distance from the station to the selected pin.
   useEffect(() => {
@@ -249,6 +301,8 @@ export function CustomerOrderWaterPage() {
   }, [config, quantity, containerType]);
 
   const handlePick = (nextPoint: LatLng) => {
+    defaultLocationApplied.current = true;
+    setDefaultLookupError(null);
     setPoint(nextPoint);
     setFormError(null);
   };
@@ -256,7 +310,7 @@ export function CustomerOrderWaterPage() {
   const handleUseLocation = async () => {
     try {
       const location = await getBrowserLocation();
-      setPoint(location);
+      handlePick(location);
       toast.success("Current location selected. Adjust the pin if needed.");
     } catch (locationError) {
       toast.error(getErrorMessage(locationError));
@@ -430,8 +484,9 @@ export function CustomerOrderWaterPage() {
                   Delivery location
                 </h2>
                 <p className="mt-1 text-xs text-slate-400">
-                  Tap the map or drag the pin. We calculate the actual road
-                  distance from the station.
+                  Your saved default location is preloaded. Tap the map or drag
+                  the pin to adjust it, and we calculate the road distance from
+                  the station.
                 </p>
               </div>
               <Button
@@ -453,6 +508,12 @@ export function CustomerOrderWaterPage() {
                 zoom={14}
               />
             </div>
+
+            {defaultLookupError ? (
+              <p className="mt-2 text-xs text-amber-700">
+                {defaultLookupError}
+              </p>
+            ) : null}
 
             {distanceState === "loading" ? (
               <div className="mt-3 flex items-center gap-2 rounded-lg bg-brand-50 px-3 py-2.5 text-sm text-brand-800">

@@ -250,14 +250,6 @@ export function DriverDeliveryPage() {
           <ArrowLeft className="h-4 w-4" />
           Deliveries
         </Link>
-        <Button
-          size="sm"
-          variant="outline"
-          icon={<RefreshCw className="h-3.5 w-3.5" />}
-          onClick={() => void load(true)}
-        >
-          Refresh
-        </Button>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">

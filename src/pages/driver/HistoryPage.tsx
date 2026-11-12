@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom'
 import {
   CheckCircle2,
   Droplets,
-  RefreshCw,
   Route,
   Search,
   Truck,
@@ -118,14 +117,6 @@ export function DriverHistoryPage() {
             Every delivery assigned to your account.
           </p>
         </div>
-        <Button
-          size="sm"
-          variant="outline"
-          icon={<RefreshCw className="h-3.5 w-3.5" />}
-          onClick={() => void load(true)}
-        >
-          Refresh
-        </Button>
       </div>
 
       <div className="grid grid-cols-3 gap-2">

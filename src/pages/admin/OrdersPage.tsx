@@ -4,14 +4,12 @@ import {
   CalendarDays,
   Filter,
   Package,
-  RefreshCw,
   Search,
   X,
 } from 'lucide-react'
 import type { OrderStatus, OrderWithRelations } from '../../types'
 import { listAdminOrders } from '../../services/orders'
 import { useRealtimeRefresh } from '../../hooks/useRealtimeRefresh'
-import { useToast } from '../../contexts/ToastContext'
 import { getErrorMessage } from '../../utils/errors'
 import { ORDER_STATUSES, ORDER_STATUS_META } from '../../utils/constants'
 import {
@@ -33,7 +31,6 @@ export function AdminOrdersPage() {
   const [status, setStatus] = useState<OrderStatus | 'all'>('all')
   const [date, setDate] = useState('')
   const [searchParams, setSearchParams] = useSearchParams()
-  const toast = useToast()
 
   const driverFilter = searchParams.get('driver')
   const customerFilter = searchParams.get('customer')
@@ -94,26 +91,12 @@ export function AdminOrdersPage() {
     }
   }
 
-  const handleRefresh = async () => {
-    await load(true)
-    toast.success('Orders refreshed.')
-  }
-
   return (
     <div className="space-y-5">
       <PageHeader
         eyebrow="Operations"
         title="Order management"
         description="Search and inspect every customer order. Drivers claim pending deliveries themselves, and delivery status updates automatically."
-        actions={
-          <Button
-            variant="outline"
-            icon={<RefreshCw className="h-4 w-4" />}
-            onClick={() => void handleRefresh()}
-          >
-            Refresh
-          </Button>
-        }
       />
 
       {error ? (

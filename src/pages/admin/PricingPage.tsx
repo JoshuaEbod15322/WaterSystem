@@ -3,7 +3,6 @@ import {
   Calculator,
   Droplets,
   PackagePlus,
-  RefreshCw,
   Save,
   Truck,
 } from "lucide-react";
@@ -114,15 +113,6 @@ export function AdminPricingPage() {
         eyebrow="Configuration"
         title="Price management"
         description="Set the current 19L water price, new container price and flat delivery fee. Prices are always recalculated on the server when an order is placed."
-        actions={
-          <Button
-            variant="outline"
-            icon={<RefreshCw className="h-4 w-4" />}
-            onClick={() => void load()}
-          >
-            Refresh
-          </Button>
-        }
       />
 
       {error ? (

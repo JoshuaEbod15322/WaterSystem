@@ -13,7 +13,6 @@ import {
   MapPin,
   Package,
   Phone,
-  RefreshCw,
   Truck,
   UserRound,
   XCircle,
@@ -217,20 +216,11 @@ export function AdminOrderDetailPage() {
         title="Order details"
         description={`Placed ${formatDateTime(order.created_at)}`}
         actions={
-          <>
-            <Button
-              variant="outline"
-              icon={<RefreshCw className="h-4 w-4" />}
-              onClick={() => void load(true)}
-            >
-              Refresh
+          <Link to="/admin/orders">
+            <Button variant="ghost" icon={<ArrowLeft className="h-4 w-4" />}>
+              Orders
             </Button>
-            <Link to="/admin/orders">
-              <Button variant="ghost" icon={<ArrowLeft className="h-4 w-4" />}>
-                Orders
-              </Button>
-            </Link>
-          </>
+          </Link>
         }
       />
 

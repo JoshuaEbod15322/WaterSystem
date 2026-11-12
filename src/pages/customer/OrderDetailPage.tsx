@@ -8,7 +8,6 @@ import {
   CreditCard,
   MapPin,
   Package,
-  RefreshCw,
   Truck,
   XCircle,
 } from 'lucide-react'
@@ -242,20 +241,11 @@ export function CustomerOrderDetailPage() {
         title="Order details"
         description={`Placed ${formatDateTime(order.created_at)}`}
         actions={
-          <>
-            <Button
-              variant="outline"
-              icon={<RefreshCw className="h-4 w-4" />}
-              onClick={() => void load(true)}
-            >
-              Refresh
+          <Link to="/customer/orders">
+            <Button variant="ghost" icon={<ArrowLeft className="h-4 w-4" />}>
+              My orders
             </Button>
-            <Link to="/customer/orders">
-              <Button variant="ghost" icon={<ArrowLeft className="h-4 w-4" />}>
-                My orders
-              </Button>
-            </Link>
-          </>
+          </Link>
         }
       />
 

@@ -86,7 +86,7 @@ export function LoginPage() {
         </div>
         <div className="relative flex items-center gap-2 text-xs text-slate-500">
           <ShieldCheck className="h-4 w-4" />
-          Protected by Supabase authentication and row-level security.
+          Protected by Supabase authentication.
         </div>
       </div>
 

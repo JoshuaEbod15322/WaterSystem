@@ -3,7 +3,6 @@ import {
   CalendarClock,
   Pencil,
   Plus,
-  RefreshCw,
   Save,
   Trash2,
 } from "lucide-react";
@@ -188,18 +187,9 @@ export function AdminSchedulesPage() {
         title="Delivery schedules"
         description="Define the weekly delivery windows customers can choose from. Each window has its own maximum number of orders per day."
         actions={
-          <>
-            <Button
-              variant="outline"
-              icon={<RefreshCw className="h-4 w-4" />}
-              onClick={() => void load(true)}
-            >
-              Refresh
-            </Button>
-            <Button icon={<Plus className="h-4 w-4" />} onClick={openCreate}>
-              Add schedule
-            </Button>
-          </>
+          <Button icon={<Plus className="h-4 w-4" />} onClick={openCreate}>
+            Add schedule
+          </Button>
         }
       />
 

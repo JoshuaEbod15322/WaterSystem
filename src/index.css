@@ -120,3 +120,41 @@
 .route-flow {
   animation: route-flow 1.1s linear infinite;
 }
+
+/* A4, text-only report printing. Charts are hidden; tables replace them. */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+    color: #0f172a !important;
+    font-size: 11pt;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .print-section {
+    break-inside: avoid;
+    margin-bottom: 8mm;
+  }
+
+  .print-section:last-child {
+    margin-bottom: 0;
+  }
+
+  table {
+    border-collapse: collapse;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  tr {
+    break-inside: avoid;
+  }
+}

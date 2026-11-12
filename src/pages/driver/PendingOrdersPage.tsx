@@ -7,7 +7,6 @@ import {
   Clock,
   MapPin,
   Navigation,
-  RefreshCw,
   Truck,
 } from 'lucide-react'
 import type { Order } from '../../types'
@@ -80,14 +79,6 @@ export function DriverPendingOrdersPage() {
             {format(new Date(), 'EEEE, MMMM d, yyyy')}
           </p>
         </div>
-        <Button
-          size="sm"
-          variant="outline"
-          icon={<RefreshCw className="h-3.5 w-3.5" />}
-          onClick={() => void load(true)}
-        >
-          Refresh
-        </Button>
       </div>
 
       <div className="grid grid-cols-3 gap-2">

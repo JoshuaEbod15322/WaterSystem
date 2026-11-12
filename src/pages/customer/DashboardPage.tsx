@@ -6,7 +6,6 @@ import {
   MapPin,
   Package,
   Plus,
-  RefreshCw,
   Truck,
 } from 'lucide-react'
 import type { Order } from '../../types'
@@ -92,18 +91,9 @@ export function CustomerDashboardPage() {
         title={`Hello, ${firstName}!`}
         description="Order purified 19L water, follow your deliveries and keep track of every refill."
         actions={
-          <>
-            <Button
-              variant="outline"
-              icon={<RefreshCw className="h-4 w-4" />}
-              onClick={() => void load(true)}
-            >
-              Refresh
-            </Button>
-            <Link to="/customer/order">
-              <Button icon={<Plus className="h-4 w-4" />}>Order water</Button>
-            </Link>
-          </>
+          <Link to="/customer/order">
+            <Button icon={<Plus className="h-4 w-4" />}>Order water</Button>
+          </Link>
         }
       />
 

@@ -4,7 +4,6 @@ import {
   Mail,
   MapPin,
   Phone,
-  RefreshCw,
   Search,
   UserCheck,
   UserX,
@@ -122,15 +121,6 @@ export function AdminCustomersPage() {
         eyebrow="Accounts"
         title="Customer management"
         description="View customer accounts, order history and account status. Customer accounts are created through public signup only."
-        actions={
-          <Button
-            variant="outline"
-            icon={<RefreshCw className="h-4 w-4" />}
-            onClick={() => void load(true)}
-          >
-            Refresh
-          </Button>
-        }
       />
 
       {error ? (

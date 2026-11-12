@@ -4,9 +4,10 @@ import { format, subDays } from "date-fns";
 import {
   Activity,
   ArrowRight,
+  ChevronLeft,
+  ChevronRight,
   CreditCard,
   Package,
-  RefreshCw,
 } from "lucide-react";
 import type { OrderWithRelations } from "../../types";
 import { listAdminOrders } from "../../services/orders";
@@ -17,9 +18,8 @@ import {
   type PaidSale,
 } from "../../services/reports";
 import { useRealtimeRefresh } from "../../hooks/useRealtimeRefresh";
-import { useToast } from "../../contexts/ToastContext";
 import { getErrorMessage } from "../../utils/errors";
-import { ORDER_STATUSES, ORDER_STATUS_META } from "../../utils/constants";
+import { ORDER_STATUS_CHART_COLORS } from "../../utils/chartColors";
 import { formatShortDate } from "../../utils/dates";
 import { formatPeso } from "../../utils/money";
 import {
@@ -31,6 +31,7 @@ import {
 } from "../../components/common/ui";
 import { Button } from "../../components/common/Button";
 import { OrderTable } from "../../components/admin/OrderTable";
+import { DonutChart } from "../../components/charts/DonutChart";
 
 interface DashboardData {
   orders: OrderWithRelations[];
@@ -39,11 +40,13 @@ interface DashboardData {
   paidSales: PaidSale[];
 }
 
+const RECENT_ORDERS_PER_PAGE = 5;
+
 export function AdminDashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const toast = useToast();
+  const [recentPage, setRecentPage] = useState(1);
 
   const load = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
@@ -77,18 +80,53 @@ export function AdminDashboardPage() {
   // refresh the sales figures when the payments table changes too.
   useRealtimeRefresh("payments", () => void load(true));
 
-  const recentOrders = useMemo(
-    () => data?.orders.slice(0, 6) ?? [],
-    [data?.orders],
+  const recentTotal = data?.orders.length ?? 0;
+  const recentPageCount = Math.max(
+    1,
+    Math.ceil(recentTotal / RECENT_ORDERS_PER_PAGE),
+  );
+  const recentOrders = useMemo(() => {
+    const start = (recentPage - 1) * RECENT_ORDERS_PER_PAGE;
+    return (
+      data?.orders.slice(start, start + RECENT_ORDERS_PER_PAGE) ?? []
+    );
+  }, [data?.orders, recentPage]);
+  const recentStart =
+    recentTotal === 0 ? 0 : (recentPage - 1) * RECENT_ORDERS_PER_PAGE + 1;
+  const recentEnd = Math.min(
+    recentPage * RECENT_ORDERS_PER_PAGE,
+    recentTotal,
   );
 
-  const statusCounts = useMemo(() => {
-    const map = new Map<string, number>();
-    data?.orders.forEach((order) => {
-      map.set(order.order_status, (map.get(order.order_status) ?? 0) + 1);
-    });
-    return map;
-  }, [data?.orders]);
+  useEffect(() => {
+    setRecentPage((page) => Math.min(page, recentPageCount));
+  }, [recentPageCount]);
+
+  const statusSegments = useMemo(
+    () => [
+      {
+        label: "Pending",
+        value: data?.counts.pending ?? 0,
+        color: ORDER_STATUS_CHART_COLORS.pending,
+      },
+      {
+        label: "Out for delivery",
+        value: data?.counts.active ?? 0,
+        color: ORDER_STATUS_CHART_COLORS.out_for_delivery,
+      },
+      {
+        label: "Delivered",
+        value: data?.counts.completed ?? 0,
+        color: ORDER_STATUS_CHART_COLORS.delivered,
+      },
+      {
+        label: "Cancelled",
+        value: data?.counts.cancelled ?? 0,
+        color: ORDER_STATUS_CHART_COLORS.cancelled,
+      },
+    ],
+    [data?.counts],
+  );
 
   // Revenue is recognised when the payment settles (online checkout or cash
   // collected on delivery), not when the order status changes.
@@ -113,26 +151,12 @@ export function AdminDashboardPage() {
     return { days, max };
   }, [data?.paidSales]);
 
-  const handleRefresh = async () => {
-    await load(true);
-    toast.success("Dashboard refreshed.");
-  };
-
   return (
     <div className="space-y-6">
       <PageHeader
         eyebrow="Station overview"
         title="Admin dashboard"
         description="Live snapshot of orders and sales for the station."
-        actions={
-          <Button
-            variant="outline"
-            icon={<RefreshCw className="h-4 w-4" />}
-            onClick={() => void handleRefresh()}
-          >
-            Refresh
-          </Button>
-        }
       />
 
       {error ? (
@@ -145,7 +169,7 @@ export function AdminDashboardPage() {
         <Spinner label="Loading station data…" />
       ) : data ? (
         <>
-          <div className="grid grid-cols-2 gap-3 sm:max-w-xl">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <StatCard
               label="Total orders"
               value={data.counts.total}
@@ -187,39 +211,98 @@ export function AdminDashboardPage() {
                 emptyTitle="No orders yet"
                 emptyDescription="Customer orders will appear here in real time."
               />
+              {recentTotal > 0 ? (
+                <div className="flex flex-col gap-3 border-t border-slate-100 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-xs text-slate-500">
+                    Showing{" "}
+                    <span className="font-semibold text-slate-700">
+                      {recentStart}–{recentEnd}
+                    </span>{" "}
+                    of{" "}
+                    <span className="font-semibold text-slate-700">
+                      {recentTotal}
+                    </span>{" "}
+                    orders
+                  </p>
+                  {recentPageCount > 1 ? (
+                    <div className="flex items-center justify-between gap-2 sm:justify-end">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        icon={<ChevronLeft className="h-3.5 w-3.5" />}
+                        disabled={recentPage === 1}
+                        onClick={() =>
+                          setRecentPage((page) => Math.max(1, page - 1))
+                        }
+                      >
+                        Previous
+                      </Button>
+                      <span className="text-xs font-medium text-slate-500">
+                        Page{" "}
+                        <span className="font-semibold text-slate-700">
+                          {recentPage}
+                        </span>{" "}
+                        of {recentPageCount}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        icon={<ChevronRight className="h-3.5 w-3.5" />}
+                        disabled={recentPage === recentPageCount}
+                        onClick={() =>
+                          setRecentPage((page) =>
+                            Math.min(recentPageCount, page + 1),
+                          )
+                        }
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
             </Card>
 
             <Card className="p-4">
               <h2 className="text-sm font-semibold text-slate-900">
                 Order status overview
               </h2>
-              <div className="mt-4 space-y-3">
-                {ORDER_STATUSES.map((status) => {
-                  const count = statusCounts.get(status) ?? 0;
-                  const total = Math.max(data.counts.total, 1);
-                  const percentage = Math.round((count / total) * 100);
-                  return (
-                    <div key={status}>
-                      <div className="flex items-center justify-between text-xs">
+              <p className="text-xs text-slate-400">
+                Distribution of all orders
+              </p>
+              <div className="mt-4 flex flex-col items-center gap-5">
+                <DonutChart
+                  segments={statusSegments}
+                  centerValue={data.counts.total}
+                  centerLabel="Orders"
+                />
+                <ul className="w-full space-y-2.5">
+                  {statusSegments.map((segment) => {
+                    const percentage = data.counts.total
+                      ? Math.round((segment.value / data.counts.total) * 100)
+                      : 0;
+                    return (
+                      <li
+                        key={segment.label}
+                        className="flex items-center justify-between gap-3 text-xs"
+                      >
                         <span className="flex items-center gap-2 text-slate-600">
                           <span
-                            className={`h-2 w-2 rounded-full ${ORDER_STATUS_META[status].dot}`}
+                            className="h-2.5 w-2.5 rounded-full"
+                            style={{ backgroundColor: segment.color }}
                           />
-                          {ORDER_STATUS_META[status].label}
+                          {segment.label}
                         </span>
-                        <span className="font-semibold text-slate-900">
-                          {count}
+                        <span className="font-semibold tabular-nums text-slate-900">
+                          {segment.value}
+                          <span className="ml-1 font-normal text-slate-400">
+                            ({percentage}%)
+                          </span>
                         </span>
-                      </div>
-                      <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-100">
-                        <div
-                          className={`h-full rounded-full ${ORDER_STATUS_META[status].dot}`}
-                          style={{ width: `${percentage}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
+                      </li>
+                    );
+                  })}
+                </ul>
               </div>
             </Card>
           </div>

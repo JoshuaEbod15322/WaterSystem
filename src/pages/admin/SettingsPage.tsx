@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Clock, Phone, RefreshCw, Save, Store } from "lucide-react";
+import { Clock, Phone, Save, Store } from "lucide-react";
 import type { StationSettings } from "../../types";
 import {
   getStationSettings,
@@ -102,15 +102,6 @@ export function AdminSettingsPage() {
         eyebrow="Configuration"
         title="Station settings"
         description="Set the station's real name, address, contact details and coordinates. The coordinates are used as the starting point for every delivery route."
-        actions={
-          <Button
-            variant="outline"
-            icon={<RefreshCw className="h-4 w-4" />}
-            onClick={() => void load()}
-          >
-            Refresh
-          </Button>
-        }
       />
 
       {error ? (

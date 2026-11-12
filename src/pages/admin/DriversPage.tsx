@@ -4,7 +4,6 @@ import {
   Mail,
   Phone,
   Plus,
-  RefreshCw,
   Search,
   // ShieldCheck,
   Truck,
@@ -123,24 +122,15 @@ export function AdminDriversPage() {
         title="Driver management"
         description="Create driver accounts, manage access and review delivery activity. Only administrators can create driver logins."
         actions={
-          <>
-            <Button
-              variant="outline"
-              icon={<RefreshCw className="h-4 w-4" />}
-              onClick={() => void load(true)}
-            >
-              Refresh
-            </Button>
-            <Button
-              icon={<Plus className="h-4 w-4" />}
-              onClick={() => {
-                setEditingDriver(null);
-                setFormOpen(true);
-              }}
-            >
-              Create driver
-            </Button>
-          </>
+          <Button
+            icon={<Plus className="h-4 w-4" />}
+            onClick={() => {
+              setEditingDriver(null);
+              setFormOpen(true);
+            }}
+          >
+            Create driver
+          </Button>
         }
       />
 

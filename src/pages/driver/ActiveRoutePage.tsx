@@ -60,7 +60,7 @@ export function DriverActiveRoutePage() {
   const { position, error: gpsError, status, start, stop } = useDriverLocation(
     profile?.id,
   )
-  const { orders, station, loading, error, load } = useDriverOrders(profile?.id)
+  const { orders, station, loading, error } = useDriverOrders(profile?.id)
 
   const activeOrders = useMemo(
     () =>
@@ -107,14 +107,6 @@ export function DriverActiveRoutePage() {
             {format(new Date(), 'EEEE, MMMM d, yyyy')}
           </p>
         </div>
-        <Button
-          size="sm"
-          variant="outline"
-          icon={<RefreshCw className="h-3.5 w-3.5" />}
-          onClick={() => void load(true)}
-        >
-          Refresh
-        </Button>
       </div>
 
       <GpsControl

@@ -126,8 +126,8 @@ export function AdminLayout() {
   }, [location.pathname])
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 lg:block">
+    <div className="min-h-screen bg-slate-50 print:bg-white">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 lg:block print:hidden">
         <SidebarContent />
       </aside>
 
@@ -153,8 +153,8 @@ export function AdminLayout() {
         </div>
       ) : null}
 
-      <div className="lg:pl-64">
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-slate-200 bg-white/95 px-4 backdrop-blur lg:hidden">
+      <div className="lg:pl-64 print:pl-0">
+        <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-slate-200 bg-white/95 px-4 backdrop-blur lg:hidden print:hidden">
           <button
             type="button"
             onClick={() => setMobileOpen(true)}
@@ -166,9 +166,11 @@ export function AdminLayout() {
           <Logo to="/admin" />
         </header>
 
-        <SetupNotice />
+        <div className="print:hidden">
+          <SetupNotice />
+        </div>
 
-        <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+        <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8 print:max-w-none print:px-0 print:py-0">
           <Outlet />
         </main>
       </div>

@@ -4,7 +4,6 @@ import {
   Clock,
   MapPin,
   Navigation,
-  RefreshCw,
   Route as RouteIcon,
   Truck,
 } from 'lucide-react'
@@ -26,7 +25,6 @@ import {
   type OptimizedRoute,
 } from '../../services/maps'
 import { useRealtimeRefresh } from '../../hooks/useRealtimeRefresh'
-import { useToast } from '../../contexts/ToastContext'
 import { getErrorMessage } from '../../utils/errors'
 import { formatDeliveryDate } from '../../utils/dates'
 import {
@@ -36,7 +34,6 @@ import {
   PageHeader,
   Spinner,
 } from '../../components/common/ui'
-import { Button } from '../../components/common/Button'
 import { OrderStatusBadge } from '../../components/common/StatusBadges'
 import {
   RouteMap,
@@ -47,7 +44,6 @@ import {
 const ACTIVE_STATUSES = new Set(['out_for_delivery'])
 
 export function AdminRoutesPage() {
-  const toast = useToast()
   const [drivers, setDrivers] = useState<Profile[]>([])
   const [orders, setOrders] = useState<OrderWithRelations[]>([])
   const [locations, setLocations] = useState<DriverLocation[]>([])
@@ -153,26 +149,12 @@ export function AdminRoutesPage() {
     : null
   const origin = driverPoint ?? stationPoint
 
-  const refresh = async () => {
-    await load(true)
-    toast.success('Routes refreshed.')
-  }
-
   return (
     <div className="space-y-4">
       <PageHeader
         eyebrow="Dispatch"
         title="Route planner"
         description="See each driver's active stops in the recommended visit order, with total distance and driving time."
-        actions={
-          <Button
-            variant="outline"
-            icon={<RefreshCw className="h-4 w-4" />}
-            onClick={() => void refresh()}
-          >
-            Refresh
-          </Button>
-        }
       />
 
       {error ? (

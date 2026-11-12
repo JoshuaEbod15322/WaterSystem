@@ -248,7 +248,7 @@ export function StatCard({
           <p className="truncate text-xs font-medium uppercase tracking-wide text-slate-500">
             {label}
           </p>
-          <p className="mt-2 text-2xl font-bold tracking-tight text-slate-900">
+          <p className="mt-2 break-words text-xl font-bold tracking-tight text-slate-900 tabular-nums sm:text-2xl">
             {value}
           </p>
           {hint ? <p className="mt-1 text-xs text-slate-400">{hint}</p> : null}
